@@ -61,8 +61,8 @@ make flatpak-bundle
 ### Receita para distribuição tar.gz
 
 ```bash
-# 1. Gerar o tarball
-make dist
+# 1. Baixe o arquivo tar.gz em releases
+https://github.com/mayrinck/blufixer/releases
 
 # 2. Extrair no sistema de destino
 tar -xzf org.renanmayrinck.blufixer-1.5.0.tar.gz
@@ -77,6 +77,37 @@ Para empacotadores: usar `DESTDIR` para instalar em diretório temporário.
 
 ```bash
 make DESTDIR=/tmp/pkgdir PREFIX=/usr install
+```
+
+### Receita para RPM (Fedora / RHEL)
+
+```bash
+# Construir o pacote RPM (gera .rpm e .src.rpm)
+make rpm
+
+# Instalar o RPM gerado
+sudo dnf install ~/rpmbuild/RPMS/x86_64/blufixer-*.rpm
+
+# Reconstruir para outra versão do Fedora a partir do SRPM:
+# 1. Copie o SRPM para a máquina de destino
+# 2. Execute:
+#    rpm --rebuild blufixer-1.5.0-*.src.rpm
+```
+
+**Compatibilidade entre versões do Fedora:**  
+O SRPM (`make rpm`) pode ser reconstruído em qualquer versão do Fedora com
+`rpm --rebuild`. Isso garante que as bibliotecas do sistema de destino
+sejam usadas na linkedição. Para construir para Fedora 43 diretamente
+do Fedora 44:
+
+```bash
+# Instalar mock
+sudo dnf install mock
+sudo usermod -a -G mock $USER
+# (reload session)
+
+# Construir para Fedora 43
+make rpm-mock
 ```
 
 ### Receita para Flatpak

@@ -1024,8 +1024,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_insert_action_group(app_data.window, "win", G_ACTION_GROUP(actions));
     
     app_data.main_menu = g_menu_new();
-    g_menu_append(app_data.main_menu, "Sobre o BluFixer", "win.about");
-    g_menu_append(app_data.main_menu, "Repositório GitHub", "win.github");
+    g_menu_append(app_data.main_menu, "Sobre", "win.about");
+    g_menu_append(app_data.main_menu, "Repositório no GitHub", "win.github");
     g_menu_append(app_data.main_menu, "Doar ao autor", "win.donate");
 
     app_data.toast_overlay = adw_toast_overlay_new();
@@ -1050,8 +1050,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
     /* --- TELA 1: DISPOSITIVOS --- */
     GtkWidget *pg1 = adw_preferences_page_new();
     app_data.devices_group = adw_preferences_group_new();
-    adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(app_data.devices_group), "Dispositivos USB Detectados");
-    adw_preferences_group_set_description(ADW_PREFERENCES_GROUP(app_data.devices_group), "Selecione o adaptador que deseja modificar.");
+    adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(app_data.devices_group), "Lista de adaptadores");
+    adw_preferences_group_set_description(ADW_PREFERENCES_GROUP(app_data.devices_group), "Selecione o adaptador que deseja modificar");
     
     GtkWidget *btn_scan = gtk_button_new();
     GtkWidget *scan_content = adw_button_content_new();

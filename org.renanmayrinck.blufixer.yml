@@ -25,12 +25,14 @@ modules:
     buildsystem: simple
     build-commands:
       - gcc -o blufixer main.c $(pkg-config --cflags --libs gtk4 libadwaita-1)
-      - install -Dm755 blufixer /app/bin/blufixer
-      - install -Dm644 hicolor/128x128/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/128x128/apps/org.renanmayrinck.blufixer.png
-      - install -Dm644 hicolor/48x48/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/48x48/apps/org.renanmayrinck.blufixer.png
-      - install -Dm644 hicolor/24x24/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/24x24/apps/org.renanmayrinck.blufixer.png
-      - install -Dm644 hicolor/scalable/apps/org.renanmayrinck.blufixer.svg /app/share/icons/hicolor/scalable/apps/org.renanmayrinck.blufixer.svg
-      - install -Dm644 org.renanmayrinck.blufixer.desktop /app/share/applications/org.renanmayrinck.blufixer.desktop
+      - mkdir -p /app/bin /app/share/icons/hicolor/128x128/apps /app/share/icons/hicolor/48x48/apps /app/share/icons/hicolor/24x24/apps /app/share/icons/hicolor/scalable/apps /app/share/applications
+      - umask 022 && cp blufixer /app/bin/blufixer
+      - umask 022 && cp hicolor/128x128/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/128x128/apps/org.renanmayrinck.blufixer.png
+      - umask 022 && cp hicolor/48x48/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/48x48/apps/org.renanmayrinck.blufixer.png
+      - umask 022 && cp hicolor/24x24/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/24x24/apps/org.renanmayrinck.blufixer.png
+      - umask 022 && cp hicolor/scalable/apps/org.renanmayrinck.blufixer.svg /app/share/icons/hicolor/scalable/apps/org.renanmayrinck.blufixer.svg
+      - umask 022 && cp org.renanmayrinck.blufixer.desktop /app/share/applications/org.renanmayrinck.blufixer.desktop
     sources:
-      - type: dir
-        path: .
+      - type: git
+        url: file:///mnt/BACKUP/GithubRepos/org.renanmayrinck.blufixer
+        branch: main
