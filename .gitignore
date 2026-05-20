@@ -1,0 +1,4 @@
+blufixer
+build-dir/
+*.tar.gz
+*.flatpak

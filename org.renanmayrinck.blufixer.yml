@@ -1,0 +1,36 @@
+id: org.renanmayrinck.blufixer
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+command: blufixer
+
+finish-args:
+  # Acesso ao sistema de arquivos para correções Bluetooth
+  - --filesystem=/etc
+  - --filesystem=/lib/firmware
+  - --filesystem=/var/lib/bluetooth
+  # Dispositivos USB para lsusb
+  - --device=usb
+  # Rede para download de firmwares
+  - --share=network
+  # D-Bus do sistema (bluetoothctl, systemctl)
+  - --socket=system-bus
+  # D-Bus da sessão
+  - --socket=session-bus
+  # Portal flatpak-spawn para executar comandos no host
+  - --talk-name=org.freedesktop.Flatpak
+
+modules:
+  - name: blufixer
+    buildsystem: simple
+    build-commands:
+      - gcc -o blufixer main.c $(pkg-config --cflags --libs gtk4 libadwaita-1)
+      - install -Dm755 blufixer /app/bin/blufixer
+      - install -Dm644 hicolor/128x128/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/128x128/apps/org.renanmayrinck.blufixer.png
+      - install -Dm644 hicolor/48x48/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/48x48/apps/org.renanmayrinck.blufixer.png
+      - install -Dm644 hicolor/24x24/apps/org.renanmayrinck.blufixer.png /app/share/icons/hicolor/24x24/apps/org.renanmayrinck.blufixer.png
+      - install -Dm644 hicolor/scalable/apps/org.renanmayrinck.blufixer.svg /app/share/icons/hicolor/scalable/apps/org.renanmayrinck.blufixer.svg
+      - install -Dm644 org.renanmayrinck.blufixer.desktop /app/share/applications/org.renanmayrinck.blufixer.desktop
+    sources:
+      - type: dir
+        path: .

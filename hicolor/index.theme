@@ -1,0 +1,26 @@
+[Icon Theme]
+Name=BluFixer
+Comment=BluFixer application icons
+Directories=24x24/apps,48x48/apps,128x128/apps,scalable/apps
+
+[24x24/apps]
+Size=24
+Context=Applications
+Type=Fixed
+
+[48x48/apps]
+Size=48
+Context=Applications
+Type=Fixed
+
+[128x128/apps]
+Size=128
+Context=Applications
+Type=Fixed
+
+[scalable/apps]
+Size=48
+Context=Applications
+Type=Scalable
+MinSize=16
+MaxSize=256
