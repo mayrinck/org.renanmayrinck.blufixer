@@ -1,0 +1,7 @@
+blufixer usr/bin/
+org.renanmayrinck.blufixer.policy usr/share/polkit-1/actions/
+org.renanmayrinck.blufixer.desktop usr/share/applications/
+hicolor/24x24/apps/org.renanmayrinck.blufixer.png usr/share/icons/hicolor/24x24/apps/
+hicolor/48x48/apps/org.renanmayrinck.blufixer.png usr/share/icons/hicolor/48x48/apps/
+hicolor/128x128/apps/org.renanmayrinck.blufixer.png usr/share/icons/hicolor/128x128/apps/
+hicolor/scalable/apps/org.renanmayrinck.blufixer.svg usr/share/icons/hicolor/scalable/apps/

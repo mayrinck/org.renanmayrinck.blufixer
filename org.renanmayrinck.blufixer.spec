@@ -1,12 +1,12 @@
 %global app_id org.renanmayrinck.blufixer
 
 Name:       blufixer
-Version:    1.5.0
+Version:    1.5.5
 Release:    1%{?dist}
 Summary:    Bluetooth troubleshooting utility for Linux
 
 License:    MIT
-URL:        https://github.com/mayrinck/%{app_id}
+URL:        https://github.com/mayrinck/blufixer
 Source0:    %{app_id}-%{version}.tar.gz
 
 BuildRequires: gcc
@@ -62,5 +62,20 @@ export CFLAGS="%{optflags} -fno-lto"
 %ghost %{_datadir}/icons/hicolor/icon-theme.cache
 
 %changelog
+* Wed May 20 2026 Renan Mayrinck <renan@renanmayrinck.com> - 1.5.5-1
+- Async popen migration for Bluetooth version query and device scan
+- Fix command injection vulnerability via g_shell_quote on usermod
+- Proper application restart via g_spawn_asyn c + g_application_quit
+- Scan race condition fix (timeout cancellation + scanning flag)
+- Fix widget memory leaks (g_list_free → g_list_free_full)
+- Add GError logging on subprocess spawn failures
+- strtol endptr validation in version parsers
+- Window validity checks in GTK idle callbacks
+- Remove dead code (info_body), dead typedef g_free
+- Pango markup escaping fixes (<> and & in info dialogs)
+- Translation audit: 6 key mismatches fixed, 3 missing entries added
+- i18n for zenity askpass prompt, atexit always registered
+- Case-insensitive lsusb scan filter
+
 * Wed May 20 2026 Renan Mayrinck <renan@renanmayrinck.com> - 1.5.0-1
 - Initial RPM release

@@ -1,0 +1,25 @@
+blufixer (1.5.5-1) unstable; urgency=medium
+
+  * Async popen migration for Bluetooth version query and device scan.
+  * Fix command injection vulnerability via g_shell_quote on usermod.
+  * Proper application restart via g_spawn_async + g_application_quit.
+  * Scan race condition fix (timeout cancellation + scanning flag).
+  * Fix widget memory leaks (g_list_free -> g_list_free_full).
+  * Add GError logging on subprocess spawn failures.
+  * strtol endptr validation in version parsers.
+  * Window validity checks in GTK idle callbacks.
+  * Remove dead code (info_body).
+  * Pango markup escaping fixes (<> and & in info dialogs).
+  * Translation audit: 6 key mismatches fixed, 3 missing entries added.
+  * i18n for zenity askpass prompt, atexit always registered.
+  * Case-insensitive lsusb scan filter.
+
+ -- Renan Mayrinck <renan@mayrinck.com>  Wed, 20 May 2026 00:00:00 -0300
+
+blufixer (1.5.0-1) unstable; urgency=medium
+
+  * Initial Debian packaging.
+  * Feature-complete release with CSR fix, ERTM toggle, Realtek/Broadcom
+    firmware installation, and Legacy pairing mode configuration.
+
+ -- Renan Mayrinck <renan@mayrinck.com>  Tue, 19 May 2026 00:00:00 -0300

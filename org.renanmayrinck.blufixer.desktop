@@ -1,7 +1,8 @@
 [Desktop Entry]
 Name=BluFixer
 GenericName=Bluetooth Fixer
-Comment=Utilitário para correção de problemas Bluetooth no Linux
+Comment=Bluetooth troubleshooting utility for Linux
+Comment[pt_BR]=Utilitário para correção de problemas Bluetooth no Linux
 Exec=blufixer
 Icon=org.renanmayrinck.blufixer
 Terminal=false

@@ -56,6 +56,9 @@ make flatpak
 
 # Construir e gerar .flatpak bundle
 make flatpak-bundle
+
+# Construir pacote .deb
+make deb
 ```
 
 ### Receita para distribuição tar.gz
@@ -65,8 +68,8 @@ make flatpak-bundle
 https://github.com/mayrinck/blufixer/releases
 
 # 2. Extrair no sistema de destino
-tar -xzf org.renanmayrinck.blufixer-1.5.0.tar.gz
-cd org.renanmayrinck.blufixer-1.5.0
+tar -xzf org.renanmayrinck.blufixer-1.5.5.tar.gz
+cd org.renanmayrinck.blufixer-1.5.5
 
 # 3. Compilar e instalar
 make
@@ -91,14 +94,13 @@ sudo dnf install ~/rpmbuild/RPMS/x86_64/blufixer-*.rpm
 # Reconstruir para outra versão do Fedora a partir do SRPM:
 # 1. Copie o SRPM para a máquina de destino
 # 2. Execute:
-#    rpm --rebuild blufixer-1.5.0-*.src.rpm
+#    rpm --rebuild blufixer-1.5.5-*.src.rpm
 ```
 
 **Compatibilidade entre versões do Fedora:**  
 O SRPM (`make rpm`) pode ser reconstruído em qualquer versão do Fedora com
 `rpm --rebuild`. Isso garante que as bibliotecas do sistema de destino
-sejam usadas na linkedição. Para construir para Fedora 43 diretamente
-do Fedora 44:
+sejam usadas na linkedição. Para construir para Fedora 43:
 
 ```bash
 # Instalar mock
@@ -127,6 +129,27 @@ flatpak run org.renanmayrinck.blufixer
 make flatpak-bundle
 ```
 
+### Receita para .deb (Debian / Ubuntu)
+
+O `Makefile` pode gerar um pacote `.deb` binário usando `dpkg-deb`:
+
+```bash
+# Construir o .deb
+make deb
+
+# Instalar
+sudo dpkg -i blufixer_1.5.5-1_amd64.deb
+sudo apt install -f   # corrigir dependências, se necessário
+```
+
+**No Debian / Ubuntu nativamente:** o repositório inclui um diretório `debian/`
+completo para uso com `dpkg-buildpackage`:
+
+```bash
+sudo apt build-dep .
+dpkg-buildpackage -us -uc
+```
+
 ## Licença
 
 MIT License. Copyright © 2026 Renan Mayrinck.
@@ -134,3 +157,7 @@ MIT License. Copyright © 2026 Renan Mayrinck.
 ## Autor
 
 **Renan Mayrinck** — [renanmayrinck.com](https://www.renanmayrinck.com) — [Apoie via LiberaPay](https://liberapay.com/RenanMayrinck/)
+
+### Aviso sobre uso de IA 🤖
+
+Este projeto foi construido usando o **Opencode**, um gerenciador de inteligência artificial para programação. Apesar do projeto ser inteiramente funcional e verificado, é possível que o código não esteja na melhor estrutura ou siga os melhores padrões de qualidade usado por profissionais de programação. Toda ajuda é bem vinda para tornar o projeto mais profissiona, então se tiver sugestões de melhorias, por favor as envie como pull requests ou [adicione uma issue](https://github.com/mayrinck/blufixer/issues).

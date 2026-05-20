@@ -4,7 +4,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
   <vendor>BluFixer</vendor>
-  <vendor_url>https://github.com/mayrinck/org.renanmayrinck.blufixer</vendor_url>
+  <vendor_url>https://github.com/mayrinck/blufixer</vendor_url>
 
   <action id="org.renanmayrinck.blufixer.privileged">
     <_description>Executar comandos administrativos do BluFixer</_description>

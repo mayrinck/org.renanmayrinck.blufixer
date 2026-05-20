@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_build:
+	$(MAKE) CFLAGS="$(CFLAGS) $(shell pkg-config --cflags gtk4 libadwaita-1)" \
+		LDFLAGS="$(LDFLAGS) $(shell pkg-config --libs gtk4 libadwaita-1)"
+
+override_dh_auto_clean:
+	$(MAKE) clean
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/blufixer PREFIX=/usr

@@ -1,0 +1,22 @@
+Source: blufixer
+Section: utils
+Priority: optional
+Maintainer: Renan Mayrinck <renan@mayrinck.com>
+Build-Depends: debhelper-compat (= 13),
+               pkg-config,
+               libgtk-4-dev,
+               libadwaita-1-dev,
+               desktop-file-utils,
+               libglib2.0-bin
+Standards-Version: 4.7.0
+Homepage: https://github.com/mayrinck/blufixer
+
+Package: blufixer
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         policykit-1
+Description: Bluetooth troubleshooting utility for Linux
+  BluFixer helps diagnose and fix common Bluetooth issues on Linux
+  desktops including CSR Energy Management, ERTM, Realtek/Broadcom
+  firmware, and Legacy pairing mode.
