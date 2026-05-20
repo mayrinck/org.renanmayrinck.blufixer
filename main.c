@@ -206,8 +206,21 @@ static const TransEntry trans_table[] = {
                                                                                                                                      "Введите пароль для исправлений Bluetooth:",
                                                                                                                                                                                      "输入蓝牙修复密码:"},
     {"Package manager not recognized.",      "Gerenciador de pacotes não reconhecido.",
-                                                                                "Gestor de paquetes no reconocido.",
-                                                                                                                    "Менеджер пакетов не распознан.",    "未识别的包管理器。"},
+                                                                                 "Gestor de paquetes no reconocido.",
+                                                                                                                     "Менеджер пакетов не распознан.",    "未识别的包管理器。"},
+    {"Checking for updates...",              "Verificando atualizações...",      "Buscando actualizaciones...",
+                                                                                                                     "Проверка обновлений...",            "正在检查更新..."},
+    {"Update: version %s available",         "Atualização: versão %s disponível","Actualización: versión %s disponible",
+                                                                                                                     "Обновление: доступна версия %s",    "更新: 版本 %s 可用"},
+    {"Update",                               "Atualizar",                        "Actualizar",                       "Обновить",                          "更新"},
+    {"You are using the latest version \xf0\x9f\x9a\x80",
+                                             "Você está usando a versão mais recente \xf0\x9f\x9a\x80",
+                                                                                 "Estás usando la última versión \xf0\x9f\x9a\x80",
+                                                                                                                     "У вас последняя версия \xf0\x9f\x9a\x80",
+                                                                                                                                                         "您正在使用最新版本 \xf0\x9f\x9a\x80"},
+    {"Could not check for updates",          "Não foi possível verificar atualizações",
+                                                                                 "No se pudo buscar actualizaciones",
+                                                                                                                     "Не удалось проверить обновления",   "无法检查更新"},
 
     /* Misc toasts */
     {"No elevation method found (pkexec/sudo). Fixes will not work.",
@@ -425,7 +438,93 @@ static const char* hci_version_to_string(int hci_ver);
 static void detect_system_tools(void);
 
 /* =========================================================================
-   2. AÇÕES DO MENU SUPERIOR (ATUALIZADO PARA BLUFIXER)
+   2. VERIFICADOR DE VERSÃO (GITHUB RELEASES)
+   ========================================================================= */
+typedef struct {
+    AdwAboutDialog *dialog;
+    gboolean success;
+    char latest_version[32];
+} UpdateCheckData;
+
+static int compare_versions(const char *v1, const char *v2) {
+    int a, b;
+    while (*v1 && *v2) {
+        if (g_ascii_isdigit(*v1) && g_ascii_isdigit(*v2)) {
+            a = 0; while (g_ascii_isdigit(*v1)) { a = a * 10 + (*v1 - '0'); v1++; }
+            b = 0; while (g_ascii_isdigit(*v2)) { b = b * 10 + (*v2 - '0'); v2++; }
+            if (a != b) return a < b ? -1 : 1;
+        } else if (*v1 == *v2) {
+            v1++; v2++;
+        } else {
+            return *v1 < *v2 ? -1 : 1;
+        }
+    }
+    return (*v1 || *v2) ? (*v1 ? 1 : -1) : 0;
+}
+
+static gboolean on_update_check_finished(gpointer user_data) {
+    UpdateCheckData *data = (UpdateCheckData *)user_data;
+    if (!data->dialog || !gtk_widget_get_realized(GTK_WIDGET(data->dialog))) {
+        g_free(data);
+        return G_SOURCE_REMOVE;
+    }
+    if (data->success && compare_versions(APP_VERSION, data->latest_version) < 0) {
+        g_autofree char *msg = g_strdup_printf(
+            _("Update: version %s available"), data->latest_version);
+        adw_about_dialog_set_comments(data->dialog, msg);
+        adw_about_dialog_add_link(data->dialog, _("Update"),
+            "https://github.com/mayrinck/blufixer/releases");
+    } else if (data->success) {
+        adw_about_dialog_set_comments(data->dialog,
+            _("You are using the latest version \xf0\x9f\x9a\x80"));
+    } else {
+        adw_about_dialog_set_comments(data->dialog,
+            _("Could not check for updates"));
+    }
+    g_free(data);
+    return G_SOURCE_REMOVE;
+}
+
+static gpointer check_update_thread(gpointer user_data) {
+    UpdateCheckData *data = (UpdateCheckData *)user_data;
+    const char *api = "https://api.github.com/repos/mayrinck/org.renanmayrinck.blufixer/releases/latest";
+    char cmd[512];
+    if (g_strcmp0(dl_cmd, "curl") == 0)
+        g_snprintf(cmd, sizeof(cmd), "curl -s %s", api);
+    else
+        g_snprintf(cmd, sizeof(cmd), "wget -q -O - %s", api);
+    FILE *fp = popen(cmd, "r");
+    if (!fp) { g_idle_add(on_update_check_finished, data); return NULL; }
+    char buf[4096];
+    size_t len = fread(buf, 1, sizeof(buf) - 1, fp);
+    buf[len] = '\0';
+    (void)pclose(fp);
+    const char *tag = strstr(buf, "\"tag_name\"");
+    if (tag) {
+        tag = strchr(tag + 10, '"');
+        if (tag) {
+            tag++;
+            const char *end = strchr(tag, '"');
+            if (end) {
+                size_t tlen = end - tag;
+                if (tlen < sizeof(data->latest_version)) {
+                    memcpy(data->latest_version, tag, tlen);
+                    data->latest_version[tlen] = '\0';
+                    if (data->latest_version[0] == 'v' || data->latest_version[0] == 'V')
+                        memmove(data->latest_version, data->latest_version + 1, tlen - 1);
+                    data->success = TRUE;
+                    g_idle_add(on_update_check_finished, data);
+                    return NULL;
+                }
+            }
+        }
+    }
+    g_idle_add(on_update_check_finished, data);
+    return NULL;
+}
+
+/* =========================================================================
+   3. AÇÕES DO MENU SUPERIOR (ATUALIZADO PARA BLUFIXER)
    ========================================================================= */
 static void on_about_action(GSimpleAction *action, GVariant *parameter, gpointer user_data) {
     AdwAboutDialog *about = ADW_ABOUT_DIALOG(adw_about_dialog_new());
@@ -433,17 +532,17 @@ static void on_about_action(GSimpleAction *action, GVariant *parameter, gpointer
     adw_about_dialog_set_version(about, APP_VERSION);
     adw_about_dialog_set_developer_name(about, "Renan Mayrinck");
     adw_about_dialog_set_license_type(about, GTK_LICENSE_MIT_X11);
-    adw_about_dialog_set_website(about, "https://www.renanmayrinck.com");
+    adw_about_dialog_set_website(about, "https://github.com/mayrinck/blufixer");
+    adw_about_dialog_set_issue_url(about, "https://github.com/mayrinck/blufixer/issues");
     adw_about_dialog_set_copyright(about, "©2026 Renan Mayrinck");
     adw_about_dialog_set_application_icon(about, "org.renanmayrinck.blufixer");
-    adw_dialog_present(ADW_DIALOG(about), app_data.window);
-}
+    adw_about_dialog_set_comments(about, _("Checking for updates..."));
 
-static void on_github_action(GSimpleAction *action, GVariant *parameter, gpointer user_data) {
-    const char *url = "https://github.com/mayrinck/blufixer";
-    GtkUriLauncher *launcher = gtk_uri_launcher_new(url);
-    gtk_uri_launcher_launch(launcher, GTK_WINDOW(app_data.window), NULL, NULL, NULL);
-    g_object_unref(launcher);
+    adw_dialog_present(ADW_DIALOG(about), app_data.window);
+
+    UpdateCheckData *check = g_new0(UpdateCheckData, 1);
+    check->dialog = about;
+    g_thread_new("check-update", check_update_thread, check);
 }
 
 static void on_donate_action(GSimpleAction *action, GVariant *parameter, gpointer user_data) {
@@ -1747,7 +1846,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
     GSimpleActionGroup *actions = g_simple_action_group_new();
     const GActionEntry entries[] = {
         { "about", on_about_action, NULL, NULL, NULL, {0} },
-        { "github", on_github_action, NULL, NULL, NULL, {0} },
         { "donate", on_donate_action, NULL, NULL, NULL, {0} },
         { "show_error_detail", on_show_error_detail, NULL, NULL, NULL, {0} },
         { "restart", on_restart_app, NULL, NULL, NULL, {0} },
@@ -1769,7 +1867,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
     g_menu_append_submenu(lang_menu, _("Language"), G_MENU_MODEL(app_data.lang_section));
 
     g_menu_append(app_data.main_menu, _("About"), "win.about");
-    g_menu_append(app_data.main_menu, _("GitHub Repository"), "win.github");
     g_menu_append(app_data.main_menu, _("Donate"), "win.donate");
     g_menu_append_section(app_data.main_menu, NULL, G_MENU_MODEL(lang_menu));
 
