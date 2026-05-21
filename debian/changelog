@@ -1,3 +1,18 @@
+blufixer (1.6.0-1) unstable; urgency=medium
+
+  * Theme selector (System / Light / Dark) with persistence in ~/.config/blufixer/theme.
+  * Update button in header bar when a new release is available on GitHub.
+  * Website link in app menu (replaces old update text).
+  * Legal notice section in About dialog (AI assistance disclosure).
+  * Modular codebase: monolithic main.c split into 9 modules under src/.
+  * Binary distribution tarball (make dist) with pre-compiled executable.
+  * All packages now output to build/ with unified naming (BluFixer-{ver}-{arch}.{ext}).
+  * RPM binary copied automatically to build/ after rpmbuild.
+  * New translation entries: Theme, Legal Notice, Website, update button.
+  * Unused translation keys removed, update strings simplified.
+
+ -- Renan Mayrinck <renan@mayrinck.com>  Thu, 21 May 2026 01:13:29 -0300
+
 blufixer (1.5.5-1) unstable; urgency=medium
 
   * Async popen migration for Bluetooth version query and device scan.

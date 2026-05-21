@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define APP_VERSION "1.5.5"
+#define APP_VERSION "1.6.0"
 
 #define LANG_CODE_EN    "en"
 #define LANG_CODE_PT    "pt_BR"
@@ -23,6 +23,14 @@ typedef enum {
 } LangId;
 
 static LangId current_lang = LANG_SYS;
+
+typedef enum {
+    THEME_SYSTEM = 0,
+    THEME_LIGHT  = 1,
+    THEME_DARK   = 2,
+} ThemeId;
+
+static ThemeId current_theme = THEME_SYSTEM;
 
 typedef struct { const char *en, *pt, *es, *ru, *zh; } TransEntry;
 
@@ -210,14 +218,8 @@ static const TransEntry trans_table[] = {
                                                                                                                      "Менеджер пакетов не распознан.",    "未识别的包管理器。"},
     {"Checking for updates...",              "Verificando atualizações...",      "Buscando actualizaciones...",
                                                                                                                      "Проверка обновлений...",            "正在检查更新..."},
-    {"Update: version %s available",         "Atualização: versão %s disponível","Actualización: versión %s disponible",
-                                                                                                                     "Обновление: доступна версия %s",    "更新: 版本 %s 可用"},
-    {"Update",                               "Atualizar",                        "Actualizar",                       "Обновить",                          "更新"},
-    {"You are using the latest version \xf0\x9f\x9a\x80",
-                                             "Você está usando a versão mais recente \xf0\x9f\x9a\x80",
-                                                                                 "Estás usando la última versión \xf0\x9f\x9a\x80",
-                                                                                                                     "У вас последняя версия \xf0\x9f\x9a\x80",
-                                                                                                                                                         "您正在使用最新版本 \xf0\x9f\x9a\x80"},
+    {"Website",                              "Site",                             "Sitio web",                        "Веб-сайт",                          "网站"},
+    {"Update to version %s",                 "Atualizar para versão %s",         "Actualizar para versión %s",       "Обновить до версии %s",             "更新到版本 %s"},
     {"Could not check for updates",          "Não foi possível verificar atualizações",
                                                                                  "No se pudo buscar actualizaciones",
                                                                                                                      "Не удалось проверить обновления",   "无法检查更新"},
@@ -235,6 +237,17 @@ static const TransEntry trans_table[] = {
                                                                                                                                                          "请重新启动应用程序以应用语言更改。"},
     {"Restart",                              "Reiniciar",                        "Reiniciar",                        "Перезапустить",                    "重启"},
     {"System Language",                      "Idioma do sistema",                "Idioma del sistema",               "Системный язык",                   "系统语言"},
+    {"Legal Notice",                         "Aviso legal",                      "Aviso legal",                      "Юридическая информация",           "法律声明"},
+    {"Developed by Renan Mayrinck.",         "Desenvolvido por Renan Mayrinck.", "Desarrollado por Renan Mayrinck.", "Разработано Renan Mayrinck.",      "由Renan Mayrinck开发。"},
+    {"This software was developed with the assistance of artificial intelligence.",
+                                             "Este software foi desenvolvido com auxílio de inteligência artificial.",
+                                                                                  "Este software fue desarrollado con ayuda de inteligencia artificial.",
+                                                                                                                      "Это программное обеспечение было разработано с помощью искусственного интеллекта.",
+                                                                                                                                                          "本软件是在人工智能的辅助下开发的。"},
+    {"Theme",                                "Tema",                               "Tema",                                "Тема",                                "主题"},
+    {"Follow System Theme",                  "Usar o tema do sistema",             "Usar el tema del sistema",            "Использовать тему системы",           "跟随系统主题"},
+    {"Light Theme",                          "Tema claro",                         "Tema claro",                          "Светлая тема",                        "浅色主题"},
+    {"Dark Theme",                           "Tema escuro",                        "Tema oscuro",                         "Тёмная тема",                         "深色主题"},
 
 };
 
@@ -285,6 +298,22 @@ static void detect_language(void) {
     }
 }
 
+static void detect_theme(void) {
+    current_theme = THEME_SYSTEM;
+    g_autofree char *cfg = g_build_filename(g_get_user_config_dir(), "blufixer", "theme", NULL);
+    g_autofree char *saved = NULL;
+    if (g_file_get_contents(cfg, &saved, NULL, NULL)) {
+        g_strchomp(saved);
+        if (g_strcmp0(saved, "light") == 0) current_theme = THEME_LIGHT;
+        else if (g_strcmp0(saved, "dark") == 0) current_theme = THEME_DARK;
+    }
+    AdwStyleManager *sm = adw_style_manager_get_default();
+    adw_style_manager_set_color_scheme(sm,
+        current_theme == THEME_LIGHT ? ADW_COLOR_SCHEME_FORCE_LIGHT :
+        current_theme == THEME_DARK  ? ADW_COLOR_SCHEME_FORCE_DARK :
+                                      ADW_COLOR_SCHEME_DEFAULT);
+}
+
 static const char* info5(const char *en, const char *pt, const char *es, const char *ru, const char *zh);
 
 /* =========================================================================
@@ -300,8 +329,10 @@ static struct {
     GtkWidget *fixes_group;
     GtkWidget *actions_group;
     GtkWidget *back_button;
+    GtkWidget *update_btn;
     GMenu     *main_menu;
     GMenu     *lang_section;
+    GMenu     *theme_section;
     char selected_vendor[8];
     char selected_product[8];
     char selected_desc[256];
@@ -349,7 +380,7 @@ static const char* lang_label(LangId id) {
     switch (id) {
         case LANG_SYS: return _("System Language");
         case LANG_EN:  return "English";
-        case LANG_PT:  return "Portugu\u00eas (BR)";
+        case LANG_PT:  return "Portugu\u00eas";
         case LANG_ES:  return "Espa\u00f1ol";
         case LANG_RU:  return "\u0420\u0443\u0441\u0441\u043a\u0438\u0439";
         case LANG_ZH:  return "\u4e2d\u6587";
@@ -372,10 +403,9 @@ static void rebuild_language_menu(void) {
         {LANG_ZH,  "win.lang_zh"},
     };
     for (size_t i = 0; i < G_N_ELEMENTS(entries); i++) {
-        g_autofree char *dn_lang = g_strdup_printf("%s %s", lang_code(entries[i].id), lang_label(entries[i].id));
         char label[128];
         g_snprintf(label, sizeof(label), "%s %s",
-            entries[i].id == current_lang ? "\u2713" : " ", dn_lang);
+            entries[i].id == current_lang ? "\u2713" : " ", lang_label(entries[i].id));
         g_menu_append(app_data.lang_section, label, entries[i].action);
     }
 }
@@ -395,6 +425,45 @@ static void set_language(LangId lang) {
     adw_toast_overlay_add_toast(ADW_TOAST_OVERLAY(app_data.toast_overlay), toast);
 }
 
+static void rebuild_theme_menu(void) {
+    if (!app_data.theme_section) return;
+    int n = g_menu_model_get_n_items(G_MENU_MODEL(app_data.theme_section));
+    for (int i = n - 1; i >= 0; i--)
+        g_menu_remove(app_data.theme_section, i);
+
+    struct { ThemeId id; const char *action; } entries[] = {
+        {THEME_SYSTEM, "win.theme_system"},
+        {THEME_LIGHT,  "win.theme_light"},
+        {THEME_DARK,   "win.theme_dark"},
+    };
+    for (size_t i = 0; i < G_N_ELEMENTS(entries); i++) {
+        char label[128];
+        const char *name = entries[i].id == THEME_SYSTEM ? _("Follow System Theme") :
+                           entries[i].id == THEME_LIGHT  ? _("Light Theme") :
+                                                           _("Dark Theme");
+        g_snprintf(label, sizeof(label), "%s %s",
+            entries[i].id == current_theme ? "\u2713" : " ", name);
+        g_menu_append(app_data.theme_section, label, entries[i].action);
+    }
+}
+
+static void set_theme(ThemeId t) {
+    if (current_theme == t) return;
+    current_theme = t;
+    g_autofree char *dir = g_build_filename(g_get_user_config_dir(), "blufixer", NULL);
+    g_mkdir_with_parents(dir, 0755);
+    g_autofree char *cfg = g_build_filename(dir, "theme", NULL);
+    g_file_set_contents(cfg,
+        t == THEME_LIGHT ? "light" :
+        t == THEME_DARK  ? "dark"  : "system", -1, NULL);
+    AdwStyleManager *sm = adw_style_manager_get_default();
+    adw_style_manager_set_color_scheme(sm,
+        t == THEME_LIGHT ? ADW_COLOR_SCHEME_FORCE_LIGHT :
+        t == THEME_DARK  ? ADW_COLOR_SCHEME_FORCE_DARK :
+                           ADW_COLOR_SCHEME_DEFAULT);
+    rebuild_theme_menu();
+}
+
 /* Lista de controle para rastrear e limpar as linhas da interface no scan */
 static GList *dynamic_rows = NULL;
 
@@ -402,7 +471,7 @@ static GList *dynamic_rows = NULL;
 static GtkWidget *scan_loader_row = NULL;
 
 /* Controle de race condition no re-escaneamento */
-static gboolean scanning = FALSE;
+static gint scanning = FALSE;
 static guint scan_timeout_id = 0;
 
 /* Detecção multiplataforma: ferramentas de sistema detectadas em tempo real */
@@ -441,7 +510,7 @@ static void detect_system_tools(void);
    2. VERIFICADOR DE VERSÃO (GITHUB RELEASES)
    ========================================================================= */
 typedef struct {
-    AdwAboutDialog *dialog;
+    GtkWidget *update_btn;
     gboolean success;
     char latest_version[32];
 } UpdateCheckData;
@@ -464,22 +533,14 @@ static int compare_versions(const char *v1, const char *v2) {
 
 static gboolean on_update_check_finished(gpointer user_data) {
     UpdateCheckData *data = (UpdateCheckData *)user_data;
-    if (!data->dialog || !gtk_widget_get_realized(GTK_WIDGET(data->dialog))) {
+    if (!data->update_btn || !app_data.window || !gtk_widget_get_realized(app_data.window)) {
         g_free(data);
         return G_SOURCE_REMOVE;
     }
     if (data->success && compare_versions(APP_VERSION, data->latest_version) < 0) {
-        g_autofree char *msg = g_strdup_printf(
-            _("Update: version %s available"), data->latest_version);
-        adw_about_dialog_set_comments(data->dialog, msg);
-        adw_about_dialog_add_link(data->dialog, _("Update"),
-            "https://github.com/mayrinck/blufixer/releases");
-    } else if (data->success) {
-        adw_about_dialog_set_comments(data->dialog,
-            _("You are using the latest version \xf0\x9f\x9a\x80"));
-    } else {
-        adw_about_dialog_set_comments(data->dialog,
-            _("Could not check for updates"));
+        g_autofree char *tooltip = g_strdup_printf(_("Update to version %s"), data->latest_version);
+        gtk_widget_set_tooltip_text(data->update_btn, tooltip);
+        gtk_widget_set_visible(data->update_btn, TRUE);
     }
     g_free(data);
     return G_SOURCE_REMOVE;
@@ -487,18 +548,18 @@ static gboolean on_update_check_finished(gpointer user_data) {
 
 static gpointer check_update_thread(gpointer user_data) {
     UpdateCheckData *data = (UpdateCheckData *)user_data;
-    const char *api = "https://api.github.com/repos/mayrinck/org.renanmayrinck.blufixer/releases/latest";
+    const char *api = "https://api.github.com/repos/mayrinck/blufixer/releases/latest";
     char cmd[512];
     if (g_strcmp0(dl_cmd, "curl") == 0)
         g_snprintf(cmd, sizeof(cmd), "curl -s %s", api);
     else
         g_snprintf(cmd, sizeof(cmd), "wget -q -O - %s", api);
     FILE *fp = popen(cmd, "r");
-    if (!fp) { g_idle_add(on_update_check_finished, data); return NULL; }
+    if (!fp) { g_warning("check_update: popen(\"%s\") failed", cmd); g_idle_add(on_update_check_finished, data); return NULL; }
     char buf[4096];
     size_t len = fread(buf, 1, sizeof(buf) - 1, fp);
     buf[len] = '\0';
-    (void)pclose(fp);
+    if (pclose(fp) == -1) g_warning("check_update: pclose failed");
     const char *tag = strstr(buf, "\"tag_name\"");
     if (tag) {
         tag = strchr(tag + 10, '"');
@@ -525,24 +586,42 @@ static gpointer check_update_thread(gpointer user_data) {
 
 /* =========================================================================
    3. AÇÕES DO MENU SUPERIOR (ATUALIZADO PARA BLUFIXER)
-   ========================================================================= */
+      ========================================================================= */
 static void on_about_action(GSimpleAction *action, GVariant *parameter, gpointer user_data) {
     AdwAboutDialog *about = ADW_ABOUT_DIALOG(adw_about_dialog_new());
     adw_about_dialog_set_application_name(about, "BluFixer");
     adw_about_dialog_set_version(about, APP_VERSION);
     adw_about_dialog_set_developer_name(about, "Renan Mayrinck");
-    adw_about_dialog_set_license_type(about, GTK_LICENSE_MIT_X11);
-    adw_about_dialog_set_website(about, "https://github.com/mayrinck/blufixer");
-    adw_about_dialog_set_issue_url(about, "https://github.com/mayrinck/blufixer/issues");
     adw_about_dialog_set_copyright(about, "©2026 Renan Mayrinck");
     adw_about_dialog_set_application_icon(about, "org.renanmayrinck.blufixer");
-    adw_about_dialog_set_comments(about, _("Checking for updates..."));
+    adw_about_dialog_add_link(about, _("GitHub Repository"), "https://github.com/mayrinck/blufixer");
+    adw_about_dialog_set_issue_url(about, "https://github.com/mayrinck/blufixer/issues");
+
+    g_autofree char *legal = g_strdup_printf(
+        "%s\n\n"
+        "MIT License\n"
+        "Copyright ©2026 Renan Mayrinck\n\n"
+        "Permission is hereby granted, free of charge, to any person obtaining a copy of "
+        "this software and associated documentation files (the \"Software\"), to deal "
+        "in the Software without restriction, including without limitation the rights "
+        "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell "
+        "copies of the Software, and to permit persons to whom the Software is "
+        "furnished to do so, subject to the following conditions:\n\n"
+        "The above copyright notice and this permission notice shall be included in all "
+        "copies or substantial portions of the Software.\n\n"
+        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR "
+        "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
+        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
+        "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
+        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
+        "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
+        "SOFTWARE.\n\n"
+        "%s",
+        _("Developed by Renan Mayrinck."),
+        _("This software was developed with the assistance of artificial intelligence."));
+    adw_about_dialog_add_legal_section(about, _("Legal Notice"), "©2026 Renan Mayrinck", GTK_LICENSE_CUSTOM, legal);
 
     adw_dialog_present(ADW_DIALOG(about), app_data.window);
-
-    UpdateCheckData *check = g_new0(UpdateCheckData, 1);
-    check->dialog = about;
-    g_thread_new("check-update", check_update_thread, check);
 }
 
 static void on_donate_action(GSimpleAction *action, GVariant *parameter, gpointer user_data) {
@@ -1298,11 +1377,10 @@ static void on_scan_clicked(GtkButton *btn, gpointer user_data) {
         g_source_remove(scan_timeout_id);
         scan_timeout_id = 0;
     }
-    scanning = TRUE;
 
     for (GList *l = dynamic_rows; l != NULL; l = l->next)
         adw_preferences_group_remove(ADW_PREFERENCES_GROUP(app_data.devices_group), GTK_WIDGET(l->data));
-    g_list_free_full(dynamic_rows, g_object_unref);
+    g_list_free(dynamic_rows);
     dynamic_rows = NULL;
 
     GtkWidget *row = adw_action_row_new();
@@ -1399,8 +1477,9 @@ static gpointer query_bt_version_thread(gpointer user_data) {
         : "bluetoothctl show 2>/dev/null", "r");
     if (fp) {
         while (fgets(buf, sizeof(buf), fp)) {
-            if (g_str_has_prefix(buf, "Version:")) {
-                char *p = buf + 8, *end = NULL;
+            char *ver = strstr(buf, "Version:");
+            if (ver) {
+                char *p = ver + 8, *end = NULL;
                 while (g_ascii_isspace(*p)) p++;
                 if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X'))
                     hci_ver = (int)strtol(p, &end, 16);
@@ -1410,9 +1489,10 @@ static gpointer query_bt_version_thread(gpointer user_data) {
                 break;
             }
         }
-        (void)pclose(fp);
+        if (pclose(fp) == -1) g_warning("bt_version: pclose(bluetoothctl) failed");
         if (hci_ver >= 0) { g_idle_add(on_version_queried, GINT_TO_POINTER(hci_ver)); return NULL; }
-    }
+    } else
+        g_warning("bt_version: popen(bluetoothctl) failed");
 
     fp = popen(in_flatpak
         ? "flatpak-spawn --host btmgmt info 2>/dev/null"
@@ -1423,17 +1503,19 @@ static gpointer query_bt_version_thread(gpointer user_data) {
             if (v) {
                 v += 7;
                 while (g_ascii_isspace(*v)) v++;
-                if (g_ascii_isdigit(*v)) {
+                if (g_ascii_isdigit(*v) || (v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))) {
                     char *end = NULL;
-                    hci_ver = (int)strtol(v, &end, 10);
+                    int base = (v[0] == '0' && (v[1] == 'x' || v[1] == 'X')) ? 16 : 10;
+                    hci_ver = (int)strtol(v, &end, base);
                     if (end == v) hci_ver = -1;
                     break;
                 }
             }
         }
-        (void)pclose(fp);
+        if (pclose(fp) == -1) g_warning("bt_version: pclose(btmgmt) failed");
         if (hci_ver >= 0) { g_idle_add(on_version_queried, GINT_TO_POINTER(hci_ver)); return NULL; }
-    }
+    } else
+        g_warning("bt_version: popen(btmgmt) failed");
 
     fp = popen(in_flatpak
         ? "flatpak-spawn --host hciconfig -a 2>/dev/null"
@@ -1449,8 +1531,9 @@ static gpointer query_bt_version_thread(gpointer user_data) {
                 break;
             }
         }
-        (void)pclose(fp);
-    }
+        if (pclose(fp) == -1) g_warning("bt_version: pclose(hciconfig) failed");
+    } else
+        g_warning("bt_version: popen(hciconfig) failed");
 
     g_idle_add(on_version_queried, GINT_TO_POINTER(hci_ver));
     return NULL;
@@ -1465,6 +1548,12 @@ static void on_back_clicked(GtkButton *btn, gpointer user_data) {
     gtk_stack_set_visible_child_name(GTK_STACK(app_data.view_stack), "page_devices");
 }
 
+static void on_update_btn_clicked(GtkButton *btn, gpointer user_data) {
+    GtkUriLauncher *launcher = gtk_uri_launcher_new("https://github.com/mayrinck/blufixer/releases");
+    gtk_uri_launcher_launch(launcher, GTK_WINDOW(app_data.window), NULL, NULL, NULL);
+    g_object_unref(launcher);
+}
+
 /* Language menu actions */
 static void on_lang_en(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_EN); }
 static void on_lang_pt(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_PT); }
@@ -1472,6 +1561,12 @@ static void on_lang_es(GSimpleAction *action, GVariant *param, gpointer d) { set
 static void on_lang_ru(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_RU); }
 static void on_lang_zh(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_ZH); }
 static void on_lang_sys(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_SYS); }
+
+/* Theme menu actions */
+static void on_theme_system(GSimpleAction *a, GVariant *p, gpointer d) { set_theme(THEME_SYSTEM); }
+static void on_theme_light(GSimpleAction *a, GVariant *p, gpointer d) { set_theme(THEME_LIGHT); }
+static void on_theme_dark(GSimpleAction *a, GVariant *p, gpointer d) { set_theme(THEME_DARK); }
+
 static void on_restart_app(GSimpleAction *action, GVariant *param, gpointer d) {
     const char *prgname = g_get_prgname() ? g_get_prgname() : "blufixer";
     const char *argv[] = {prgname, NULL};
@@ -1501,14 +1596,15 @@ static void init_custom_styles(void) {
         ".badge-csr      { color: #8E44AD; background-color: rgba(142, 68,  173, 0.12); }"
         ".badge-generic  { color: #888;    background-color: rgba(136, 136, 136, 0.12); }"
         ".device-title  { font-size: 15px; font-weight: 500; }"
-        ".device-sub    { font-size: 13px; color: #666666; }"
+        ".device-sub    { font-size: 13px; color: alpha(@theme_fg_color, 0.55); }"
         /* Botão de detalhes em toasts de erro (exclui botão fechar ×) */
         "toast button:not(.image-button) {"
         "  background: @error_bg_color;"
         "  color: @error_fg_color;"
         "  border-radius: 6px;"
         "  font-weight: bold;"
-        "}";
+        "}"
+        "button.update-btn { color: #00CCFE; }";
     
     gtk_css_provider_load_from_string(provider, css);
     gtk_style_context_add_provider_for_display(
@@ -1674,7 +1770,12 @@ static gpointer scan_bt_devices_thread(gpointer user_data) {
     GPtrArray *devices = g_ptr_array_new_with_free_func(scan_device_free);
     const char *lsusb_cmd = in_flatpak ? "flatpak-spawn --host lsusb" : "lsusb";
     FILE *fp = popen(lsusb_cmd, "r");
-    if (!fp) { scanning = FALSE; g_idle_add(on_scan_finished, devices); return NULL; }
+    if (!fp) {
+        g_warning("scan_bt_devices_thread: popen(\"%s\") failed", lsusb_cmd);
+        g_atomic_int_set(&scanning, FALSE);
+        g_idle_add(on_scan_finished, devices);
+        return NULL;
+    }
     char line[256];
 
     while (fgets(line, sizeof(line), fp)) {
@@ -1693,23 +1794,24 @@ static gpointer scan_bt_devices_thread(gpointer user_data) {
             }
         }
     }
-    (void)pclose(fp);
-    scanning = FALSE;
+    if (pclose(fp) == -1)
+        g_warning("scan_bt_devices_thread: pclose failed");
+    g_atomic_int_set(&scanning, FALSE);
 
     g_idle_add(on_scan_finished, devices);
     return NULL;
 }
 
 static void scan_bluetooth_devices(void) {
-    if (scanning) return;
+    if (g_atomic_int_get(&scanning)) return;
 
     for (GList *l = dynamic_rows; l != NULL; l = l->next) {
         adw_preferences_group_remove(ADW_PREFERENCES_GROUP(app_data.devices_group), GTK_WIDGET(l->data));
     }
-    g_list_free_full(dynamic_rows, g_object_unref);
+    g_list_free(dynamic_rows);
     dynamic_rows = NULL;
 
-    scanning = TRUE;
+    g_atomic_int_set(&scanning, TRUE);
     g_thread_new("bt-scan", scan_bt_devices_thread, NULL);
 }
 
@@ -1832,6 +1934,7 @@ static void detect_system_tools(void) {
 static void activate(GtkApplication *app, gpointer user_data) {
     app_data.app = app;
     detect_language();
+    detect_theme();
     init_custom_styles();
     detect_system_tools();
 
@@ -1855,6 +1958,9 @@ static void activate(GtkApplication *app, gpointer user_data) {
         { "lang_es", on_lang_es, NULL, NULL, NULL, {0} },
         { "lang_ru", on_lang_ru, NULL, NULL, NULL, {0} },
         { "lang_zh", on_lang_zh, NULL, NULL, NULL, {0} },
+        { "theme_system", on_theme_system, NULL, NULL, NULL, {0} },
+        { "theme_light", on_theme_light, NULL, NULL, NULL, {0} },
+        { "theme_dark", on_theme_dark, NULL, NULL, NULL, {0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(actions), entries, G_N_ELEMENTS(entries), NULL);
     gtk_widget_insert_action_group(app_data.window, "win", G_ACTION_GROUP(actions));
@@ -1862,13 +1968,18 @@ static void activate(GtkApplication *app, gpointer user_data) {
     app_data.main_menu = g_menu_new();
     app_data.lang_section = g_menu_new();
     rebuild_language_menu();
+    app_data.theme_section = g_menu_new();
+    rebuild_theme_menu();
 
     GMenu *lang_menu = g_menu_new();
     g_menu_append_submenu(lang_menu, _("Language"), G_MENU_MODEL(app_data.lang_section));
+    GMenu *theme_menu = g_menu_new();
+    g_menu_append_submenu(theme_menu, _("Theme"), G_MENU_MODEL(app_data.theme_section));
 
+    g_menu_append_section(app_data.main_menu, NULL, G_MENU_MODEL(lang_menu));
+    g_menu_append_section(app_data.main_menu, NULL, G_MENU_MODEL(theme_menu));
     g_menu_append(app_data.main_menu, _("About"), "win.about");
     g_menu_append(app_data.main_menu, _("Donate"), "win.donate");
-    g_menu_append_section(app_data.main_menu, NULL, G_MENU_MODEL(lang_menu));
 
     app_data.toast_overlay = adw_toast_overlay_new();
     adw_application_window_set_content(ADW_APPLICATION_WINDOW(app_data.window), app_data.toast_overlay);
@@ -1881,10 +1992,18 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_visible(app_data.back_button, FALSE);
     g_signal_connect(app_data.back_button, "clicked", G_CALLBACK(on_back_clicked), NULL);
     adw_header_bar_pack_start(ADW_HEADER_BAR(header), app_data.back_button);
+
+    app_data.update_btn = gtk_button_new_from_icon_name("software-update-available-symbolic");
+    gtk_widget_set_visible(app_data.update_btn, FALSE);
+    gtk_widget_add_css_class(app_data.update_btn, "update-btn");
+    g_signal_connect(app_data.update_btn, "clicked", G_CALLBACK(on_update_btn_clicked), NULL);
+
     adw_header_bar_pack_end(ADW_HEADER_BAR(header), create_menu_button());
+    adw_header_bar_pack_end(ADW_HEADER_BAR(header), app_data.update_btn);
     gtk_box_append(GTK_BOX(main_box), header);
 
     app_data.view_stack = gtk_stack_new();
+    gtk_widget_set_vexpand(app_data.view_stack, TRUE);
     gtk_stack_set_transition_type(GTK_STACK(app_data.view_stack), GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT_RIGHT);
     gtk_stack_set_transition_duration(GTK_STACK(app_data.view_stack), 250);
     gtk_box_append(GTK_BOX(main_box), app_data.view_stack);
@@ -2019,6 +2138,10 @@ static void activate(GtkApplication *app, gpointer user_data) {
         adw_toast_set_priority(toast, ADW_TOAST_PRIORITY_HIGH);
         adw_toast_overlay_add_toast(ADW_TOAST_OVERLAY(app_data.toast_overlay), toast);
     }
+
+    UpdateCheckData *check = g_new0(UpdateCheckData, 1);
+    check->update_btn = app_data.update_btn;
+    g_thread_new("check-update", check_update_thread, check);
 
     gtk_window_present(GTK_WINDOW(app_data.window));
 }

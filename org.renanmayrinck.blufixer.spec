@@ -1,7 +1,7 @@
 %global app_id org.renanmayrinck.blufixer
 
 Name:       blufixer
-Version:    1.5.5
+Version:    1.6.0
 Release:    1%{?dist}
 Summary:    Bluetooth troubleshooting utility for Linux
 
@@ -10,6 +10,7 @@ URL:        https://github.com/mayrinck/blufixer
 Source0:    %{app_id}-%{version}.tar.gz
 
 BuildRequires: gcc
+BuildRequires: make
 BuildRequires: pkgconfig
 BuildRequires: pkgconfig(gtk4)
 BuildRequires: pkgconfig(libadwaita-1)
@@ -62,6 +63,20 @@ export CFLAGS="%{optflags} -fno-lto"
 %ghost %{_datadir}/icons/hicolor/icon-theme.cache
 
 %changelog
+* Thu May 21 2026 Renan Mayrinck <renan@renanmayrinck.com> - 1.6.0-1
+- Theme selector (System/Light/Dark) with persistence
+- Update button in header bar for new GitHub releases
+- Website link in app menu
+- Legal notice in About dialog
+- Modular refactoring: monolithic main.c split into 9 src/ modules
+- Binary distribution tarball with pre-compiled executable
+- All packages output to build/ with unified naming scheme
+- RPM binary copied to build/ automatically
+- BuildRequires: make added explicitly
+- rpmbuild availability check before building
+- New i18n keys: Theme, Legal Notice, Website, Update button
+- Unused translation keys removed, update strings simplified
+
 * Wed May 20 2026 Renan Mayrinck <renan@renanmayrinck.com> - 1.5.5-1
 - Async popen migration for Bluetooth version query and device scan
 - Fix command injection vulnerability via g_shell_quote on usermod

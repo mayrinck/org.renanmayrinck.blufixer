@@ -1,7 +1,8 @@
 APP_ID     := org.renanmayrinck.blufixer
-VERSION    := 1.5.5
+VERSION    := 1.6.0
 TARGET     := blufixer
-SOURCE     := main.c
+SRCDIR     := src
+SOURCES    := $(wildcard $(SRCDIR)/*.c)
 
 PREFIX     ?= /usr/local
 BINDIR     := $(DESTDIR)$(PREFIX)/bin
@@ -12,16 +13,22 @@ METADIR    := $(DESTDIR)$(PREFIX)/share/metainfo
 
 PKGS       := gtk4 libadwaita-1
 CFLAGS     ?= -O2 -g
-CFLAGS     += $(shell pkg-config --cflags $(PKGS)) -DVERSION=\"$(VERSION)\" -DAPP_ID=\"$(APP_ID)\"
+CFLAGS     += $(shell pkg-config --cflags $(PKGS)) -DVERSION=\"$(VERSION)\" -DAPP_ID=\"$(APP_ID)\" -I$(SRCDIR)
 LDFLAGS    ?=
 LDFLAGS    += $(shell pkg-config --libs $(PKGS))
 
-.PHONY: all clean install uninstall dist flatpak flatpak-bundle rpm deb
+ARCH       := $(shell uname -m)
+DEBARCH    := $(shell dpkg-architecture -q DEB_BUILD_ARCH 2>/dev/null || echo "amd64")
+
+.PHONY: all clean install uninstall dist rpm deb rpm-mock flatpak flatpak-bundle
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCE)
+$(TARGET): $(SOURCES)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+build:
+	mkdir -p build
 
 install: $(TARGET)
 	install -d $(BINDIR)
@@ -51,16 +58,30 @@ uninstall:
 
 clean:
 	rm -f $(TARGET)
+	rm -rf build
 
-dist: clean
-	distdir=$(APP_ID)-$(VERSION); \
-	rm -rf /tmp/$$distdir /tmp/$$distdir.tar.gz; \
-	mkdir /tmp/$$distdir; \
-	cp -a . /tmp/$$distdir/; \
-	rm -rf /tmp/$$distdir/.flatpak-builder /tmp/$$distdir/.git /tmp/$$distdir/.opencode /tmp/$$distdir/build-dir /tmp/$$distdir/org.renanmayrinck.blufixer-1.5.5.tar.gz /tmp/$$distdir/org.renanmayrinck.blufixer-1.5.5.flatpak /tmp/$$distdir/blufixer*.deb; \
-	tar -C /tmp -czf $(APP_ID)-$(VERSION).tar.gz $$distdir; \
+# Binary tarball — contains pre-compiled executable for direct use
+dist: $(TARGET) | build
+	@printf '\n>>> Creating binary tarball...\n'
+	distdir=BluFixer-$(VERSION); \
 	rm -rf /tmp/$$distdir; \
-	echo "Created $(APP_ID)-$(VERSION).tar.gz"
+	mkdir -p /tmp/$$distdir/share/applications; \
+	mkdir -p /tmp/$$distdir/share/polkit-1/actions; \
+	mkdir -p /tmp/$$distdir/share/icons/hicolor; \
+	install -m 0755 $(TARGET) /tmp/$$distdir/; \
+	install -m 0644 $(APP_ID).desktop /tmp/$$distdir/share/applications/; \
+	install -m 0644 $(APP_ID).policy /tmp/$$distdir/share/polkit-1/actions/; \
+	for size in 24x24 48x48 128x128; do \
+		mkdir -p /tmp/$$distdir/share/icons/hicolor/$$size/apps; \
+		install -m 0644 hicolor/$$size/apps/$(APP_ID).png /tmp/$$distdir/share/icons/hicolor/$$size/apps/; \
+	done; \
+	mkdir -p /tmp/$$distdir/share/icons/hicolor/scalable/apps; \
+	install -m 0644 hicolor/scalable/apps/$(APP_ID).svg /tmp/$$distdir/share/icons/hicolor/scalable/apps/; \
+	install -m 0644 LICENSE /tmp/$$distdir/; \
+	install -m 0644 README.md /tmp/$$distdir/; \
+	tar -C /tmp -czf build/$$distdir-$(ARCH).tar.gz $$distdir; \
+	rm -rf /tmp/$$distdir; \
+	printf 'Created build/BluFixer-$(VERSION)-$(ARCH).tar.gz\n'
 
 flatpak:
 	rm -rf /tmp/flatpak-build /tmp/flatpak-state
@@ -75,19 +96,41 @@ flatpak-bundle: flatpak
 	flatpak build-bundle $(HOME)/.local/share/flatpak/repo \
 		$(APP_ID)-$(VERSION).flatpak $(APP_ID) master
 
-rpm: dist
-	mkdir -p $(HOME)/rpmbuild/SOURCES $(HOME)/rpmbuild/SPECS
-	cp $(APP_ID)-$(VERSION).tar.gz $(HOME)/rpmbuild/SOURCES/
+rpm: $(TARGET) | build
+	@if ! which rpmbuild >/dev/null 2>&1; then \
+		printf 'rpmbuild not installed.\n'; \
+		printf 'On Fedora: sudo dnf install rpm-build\n'; \
+		printf 'Then run: make rpm\n'; \
+		exit 1; \
+	fi
+	@printf '\n>>> Creating source tarball for rpmbuild...\n'
+	srdir=$(APP_ID)-$(VERSION); \
+	rm -rf /tmp/$$srdir /tmp/$$srdir.tar.gz; \
+	mkdir /tmp/$$srdir; \
+	cp -a . /tmp/$$srdir/; \
+	rm -rf /tmp/$$srdir/.flatpak-builder /tmp/$$srdir/.git /tmp/$$srdir/.opencode /tmp/$$srdir/build-dir /tmp/$$srdir/$(TARGET) /tmp/$$srdir/*.deb /tmp/$$srdir/*.tar.gz /tmp/$$srdir/build; \
+	tar -C /tmp -czf /tmp/$$srdir.tar.gz $$srdir; \
+	rm -rf /tmp/$$srdir; \
+	mkdir -p $(HOME)/rpmbuild/SOURCES $(HOME)/rpmbuild/SPECS; \
+	cp /tmp/$$srdir.tar.gz $(HOME)/rpmbuild/SOURCES/ && rm -f /tmp/$$srdir.tar.gz; \
 	cp $(APP_ID).spec $(HOME)/rpmbuild/SPECS/
+	@printf '\n>>> Running rpmbuild (this will take a while the first time)...\n'
 	rpmbuild -ba $(HOME)/rpmbuild/SPECS/$(APP_ID).spec
-	@echo ""
-	@echo "RPMs created:"
-	@ls -1 $(HOME)/rpmbuild/RPMS/x86_64/$(APP_ID)-*.rpm 2>/dev/null || true
-	@ls -1 $(HOME)/rpmbuild/SRPMS/$(APP_ID)-*.rpm 2>/dev/null || true
-	@echo ""
-	@echo "To rebuild on another Fedora release:"
-	@echo "  rpm --rebuild $(HOME)/rpmbuild/SRPMS/blufixer-$(VERSION)-*.src.rpm"
-	@echo ""
+	@printf '\n>>> Copying binary RPM to build/...\n'
+	rpmfile=$$(ls $(HOME)/rpmbuild/RPMS/*/blufixer-$(VERSION)-*.rpm 2>/dev/null | head -1); \
+	if [ -n "$$rpmfile" ]; then \
+		cp "$$rpmfile" build/BluFixer-$(VERSION)-$(ARCH).rpm && \
+		printf 'Created build/BluFixer-$(VERSION)-$(ARCH).rpm\n'; \
+	else \
+		printf 'WARNING: binary RPM not found in %s/rpmbuild/RPMS/\n' $(HOME); \
+	fi; \
+	srpms=$$(ls $(HOME)/rpmbuild/SRPMS/blufixer-$(VERSION)-*.src.rpm 2>/dev/null); \
+	printf 'SRPM(s) left in %s/rpmbuild/SRPMS/ for rebuild with mock\n' $(HOME); \
+	if [ -n "$$srpms" ]; then \
+		for f in $$srpms; do \
+			printf '  %s\n' "$$f"; \
+		done; \
+	fi
 
 rpm-mock: rpm
 	@if ! which mock >/dev/null 2>&1; then \
@@ -105,20 +148,10 @@ rpm-mock: rpm
 			exit 1; \
 		fi; \
 	fi
-	mock -r fedora-43-x86_64 --rebuild $(HOME)/rpmbuild/SRPMS/$(APP_ID)-$(VERSION)-*.src.rpm
+	mock -r fedora-43-x86_64 --rebuild $(HOME)/rpmbuild/SRPMS/blufixer-$(VERSION)-*.src.rpm
 
-DEBARCH := $(shell dpkg-architecture -q DEB_BUILD_ARCH 2>/dev/null || echo "amd64")
-DEB_VERSION := $(VERSION)-1
-DEB_NAME    := blufixer_$(DEB_VERSION)_$(DEBARCH).deb
-DEB_FILES   := blufixer \
-               $(APP_ID).policy \
-               $(APP_ID).desktop \
-               hicolor/24x24/apps/$(APP_ID).png \
-               hicolor/48x48/apps/$(APP_ID).png \
-               hicolor/128x128/apps/$(APP_ID).png \
-               hicolor/scalable/apps/$(APP_ID).svg
-
-deb: $(TARGET)
+deb: $(TARGET) | build
+	@printf '\n>>> Creating .deb package...\n'
 	rm -rf /tmp/pkg-deb
 	mkdir -p /tmp/pkg-deb/DEBIAN
 	mkdir -p /tmp/pkg-deb/usr/bin
@@ -138,7 +171,7 @@ deb: $(TARGET)
 	install -m 0755 debian/postinst /tmp/pkg-deb/DEBIAN/postinst
 	install -m 0755 debian/postrm /tmp/pkg-deb/DEBIAN/postrm
 	printf 'Package: blufixer\n' > /tmp/pkg-deb/DEBIAN/control
-	printf 'Version: $(DEB_VERSION)\n' >> /tmp/pkg-deb/DEBIAN/control
+	printf 'Version: $(VERSION)-1\n' >> /tmp/pkg-deb/DEBIAN/control
 	printf 'Architecture: $(DEBARCH)\n' >> /tmp/pkg-deb/DEBIAN/control
 	printf 'Maintainer: Renan Mayrinck <renan@mayrinck.com>\n' >> /tmp/pkg-deb/DEBIAN/control
 	printf 'Section: utils\n' >> /tmp/pkg-deb/DEBIAN/control
@@ -152,6 +185,5 @@ deb: $(TARGET)
 	printf ' BluFixer helps diagnose and fix common Bluetooth issues on Linux\n' >> /tmp/pkg-deb/DEBIAN/control
 	printf ' desktops including CSR Energy Management, ERTM, Realtek/Broadcom\n' >> /tmp/pkg-deb/DEBIAN/control
 	printf ' firmware, and Legacy pairing mode.\n' >> /tmp/pkg-deb/DEBIAN/control
-	dpkg-deb --build --root-owner-group /tmp/pkg-deb $(DEB_NAME)
-	@echo ""
-	@echo "Created $(DEB_NAME)"
+	dpkg-deb --build --root-owner-group /tmp/pkg-deb build/BluFixer-$(VERSION)-$(DEBARCH).deb
+	@printf '\nCreated build/BluFixer-$(VERSION)-$(DEBARCH).deb\n'
