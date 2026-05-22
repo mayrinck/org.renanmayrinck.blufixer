@@ -8,7 +8,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define APP_VERSION "1.6.0"
+#ifndef VERSION
+#define VERSION "1.6.0"
+#endif
+#define APP_VERSION VERSION
 
 #define LANG_CODE_EN    "en"
 #define LANG_CODE_PT    "pt_BR"
@@ -39,6 +42,7 @@ typedef struct {
     GtkWidget *spinner;
     char success_msg[64];
     char error_msg[64];
+    char *error_detail;
     gboolean (*is_active)(void);
     gboolean expect_active;
     int status_code;
@@ -70,8 +74,6 @@ typedef struct {
     GtkWidget *back_button;
     GtkWidget *update_btn;
     GMenu     *main_menu;
-    GMenu     *lang_section;
-    GMenu     *theme_section;
     char selected_vendor[8];
     char selected_product[8];
     char selected_desc[256];
@@ -100,6 +102,7 @@ typedef struct {
     GtkWidget *row_tech_vendor;
     GtkWidget *row_tech_id;
     GtkWidget *row_tech_version;
+    GtkWidget *row_tech_playstation;
 } AppData;
 
 extern AppData app_data;
@@ -119,7 +122,7 @@ extern char fw_path[64];
 extern gboolean has_elevation;
 extern gboolean in_flatpak;
 extern char askpass_path[128];
-extern char last_error_detail[4096];
+extern const char *last_error_detail;
 
 /* i18n.c */
 const char* _(const char *en);
@@ -128,16 +131,16 @@ LangId lang_from_str(const char *s);
 const char* lang_code(LangId id);
 const char* lang_label(LangId id);
 void detect_language(void);
-void rebuild_language_menu(void);
 void set_language(LangId lang);
 
-/* theme.c (inline in main) */
+/* app.c */
 void detect_theme(void);
-void rebuild_theme_menu(void);
 void set_theme(ThemeId t);
 
 /* dialogs.c */
 void show_info_dialog(const char *body_markup);
+void show_keyboard_shortcuts(void);
+void show_preferences_dialog(void);
 const char* dialog_color(void);
 void show_info_markup(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void on_info_copy_activated(AdwActionRow *row, gpointer user_data);
@@ -186,7 +189,7 @@ GtkWidget* create_brand_badge(const char *brand);
 GtkWidget* create_action_row_button(const char *label_txt, GCallback cb, GtkWidget **out_spinner, GtkWidget **out_lbl);
 GtkWidget* create_menu_button(void);
 
-/* main.c (callbacks referenced from other modules) */
+/* app.c (callbacks referenced from other modules) */
 void on_device_selected(GtkButton *btn, gpointer user_data);
 void on_scan_clicked(GtkButton *btn, gpointer user_data);
 gboolean delayed_scan(gpointer user_data);

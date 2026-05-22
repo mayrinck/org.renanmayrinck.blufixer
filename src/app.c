@@ -100,28 +100,6 @@ void detect_theme(void) {
                                        ADW_COLOR_SCHEME_DEFAULT);
 }
 
-void rebuild_theme_menu(void) {
-    if (!app_data.theme_section) return;
-    int n = g_menu_model_get_n_items(G_MENU_MODEL(app_data.theme_section));
-    for (int i = n - 1; i >= 0; i--)
-        g_menu_remove(app_data.theme_section, i);
-
-    struct { ThemeId id; const char *action; } entries[] = {
-        {THEME_SYSTEM, "win.theme_system"},
-        {THEME_LIGHT,  "win.theme_light"},
-        {THEME_DARK,   "win.theme_dark"},
-    };
-    for (size_t i = 0; i < G_N_ELEMENTS(entries); i++) {
-        char label[128];
-        const char *name = entries[i].id == THEME_SYSTEM ? _("Follow System Theme") :
-                           entries[i].id == THEME_LIGHT  ? _("Light Theme") :
-                                                            _("Dark Theme");
-        g_snprintf(label, sizeof(label), "%s %s",
-            entries[i].id == current_theme ? "\u2713" : " ", name);
-        g_menu_append(app_data.theme_section, label, entries[i].action);
-    }
-}
-
 void set_theme(ThemeId t) {
     if (current_theme == t) return;
     current_theme = t;
@@ -136,7 +114,6 @@ void set_theme(ThemeId t) {
         t == THEME_LIGHT ? ADW_COLOR_SCHEME_FORCE_LIGHT :
         t == THEME_DARK  ? ADW_COLOR_SCHEME_FORCE_DARK :
                            ADW_COLOR_SCHEME_DEFAULT);
-    rebuild_theme_menu();
 }
 
 void on_device_selected(GtkButton *btn, gpointer user_data) {
@@ -144,6 +121,14 @@ void on_device_selected(GtkButton *btn, gpointer user_data) {
     const char *product = g_object_get_data(G_OBJECT(btn), "product");
     const char *desc = g_object_get_data(G_OBJECT(btn), "desc");
     const char *manufacturer = g_object_get_data(G_OBJECT(btn), "manufacturer");
+
+    gboolean is_ps_licensed = g_strcmp0(vendor, "12ba") == 0 && g_strcmp0(product, "0030") == 0;
+    gboolean is_ps = g_strcmp0(manufacturer, "Sony") == 0 || is_ps_licensed;
+
+    if (is_ps_licensed) {
+        desc = "CECHYA-0080";
+        manufacturer = "Sony Computer Entertainment America LLC";
+    }
 
     g_strlcpy(app_data.selected_vendor, vendor, sizeof(app_data.selected_vendor));
     g_strlcpy(app_data.selected_product, product, sizeof(app_data.selected_product));
@@ -158,6 +143,12 @@ void on_device_selected(GtkButton *btn, gpointer user_data) {
 
     query_bluetooth_version();
     update_actions_page_state();
+
+    gtk_widget_set_visible(app_data.row_tech_playstation, is_ps);
+    if (is_ps) {
+        adw_action_row_set_subtitle(ADW_ACTION_ROW(app_data.row_tech_playstation),
+            is_ps_licensed ? _("Yes, for PlayStation\u00ae3") : _("Yes"));
+    }
 
     gtk_widget_set_visible(app_data.back_button, TRUE);
     gtk_stack_set_visible_child_name(GTK_STACK(app_data.view_stack), "page_actions");
@@ -174,7 +165,45 @@ static void on_update_btn_clicked(GtkButton *btn, gpointer user_data) {
     g_object_unref(launcher);
 }
 
-static void on_restart_app(GSimpleAction *action, GVariant *param, gpointer d) {
+static void on_keyboard_shortcuts(GSimpleAction *action, GVariant *param, gpointer user_data) {
+    show_keyboard_shortcuts();
+}
+
+static void on_toggle_theme(GSimpleAction *action, GVariant *param, gpointer user_data) {
+    set_theme(current_theme == THEME_DARK ? THEME_LIGHT : THEME_DARK);
+}
+
+static void on_copy_tech_sheet(GSimpleAction *action, GVariant *param, gpointer user_data) {
+    const char *name = adw_action_row_get_subtitle(ADW_ACTION_ROW(app_data.row_tech_name));
+    const char *vendor = adw_action_row_get_subtitle(ADW_ACTION_ROW(app_data.row_tech_vendor));
+    const char *id = adw_action_row_get_subtitle(ADW_ACTION_ROW(app_data.row_tech_id));
+    const char *version = adw_action_row_get_subtitle(ADW_ACTION_ROW(app_data.row_tech_version));
+    const char *ps = NULL;
+    if (gtk_widget_get_visible(app_data.row_tech_playstation))
+        ps = adw_action_row_get_subtitle(ADW_ACTION_ROW(app_data.row_tech_playstation));
+
+    if (!name || strlen(name) == 0) {
+        adw_toast_overlay_add_toast(ADW_TOAST_OVERLAY(app_data.toast_overlay),
+            adw_toast_new(_("No technical data to copy")));
+        return;
+    }
+
+    g_autofree char *all;
+    if (ps) {
+        all = g_strdup_printf(
+            "%s\n%s\n%s\n%s\n%s",
+            name, vendor ? vendor : "", id ? id : "", version ? version : "", ps);
+    } else {
+        all = g_strdup_printf(
+            "%s\n%s\n%s\n%s",
+            name, vendor ? vendor : "", id ? id : "", version ? version : "");
+    }
+    gdk_clipboard_set_text(gtk_widget_get_clipboard(app_data.window), all);
+    adw_toast_overlay_add_toast(ADW_TOAST_OVERLAY(app_data.toast_overlay),
+        adw_toast_new(_("Technical data copied")));
+}
+
+static void on_restart_app(GSimpleAction *action, GVariant *param, gpointer user_data) {
     const char *prgname = g_get_prgname() ? g_get_prgname() : "blufixer";
     const char *argv[] = {prgname, NULL};
     g_spawn_async(NULL, (char **)argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
@@ -182,15 +211,20 @@ static void on_restart_app(GSimpleAction *action, GVariant *param, gpointer d) {
     g_application_quit(G_APPLICATION(app_data.app));
 }
 
-static void on_lang_en(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_EN); }
-static void on_lang_pt(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_PT); }
-static void on_lang_es(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_ES); }
-static void on_lang_ru(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_RU); }
-static void on_lang_zh(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_ZH); }
-static void on_lang_sys(GSimpleAction *action, GVariant *param, gpointer d) { set_language(LANG_SYS); }
-static void on_theme_system(GSimpleAction *a, GVariant *p, gpointer d) { set_theme(THEME_SYSTEM); }
-static void on_theme_light(GSimpleAction *a, GVariant *p, gpointer d) { set_theme(THEME_LIGHT); }
-static void on_theme_dark(GSimpleAction *a, GVariant *p, gpointer d) { set_theme(THEME_DARK); }
+static void on_preferences(GSimpleAction *action, GVariant *param, gpointer user_data) {
+    show_preferences_dialog();
+}
+
+static gboolean on_key_pressed(GtkEventControllerKey *ctrl, guint keyval, guint keycode, GdkModifierType state, gpointer user_data) {
+    if ((keyval == GDK_KEY_F5) && (state & gtk_accelerator_get_default_mod_mask()) == 0) {
+        const char *page = gtk_stack_get_visible_child_name(GTK_STACK(app_data.view_stack));
+        if (g_strcmp0(page, "page_devices") == 0) {
+            on_scan_clicked(NULL, NULL);
+            return GDK_EVENT_STOP;
+        }
+    }
+    return GDK_EVENT_PROPAGATE;
+}
 
 static void activate(GtkApplication *app, gpointer user_data) {
     app_data.app = app;
@@ -213,32 +247,17 @@ static void activate(GtkApplication *app, gpointer user_data) {
         { "donate", on_donate_action, NULL, NULL, NULL, {0} },
         { "show_error_detail", on_show_error_detail, NULL, NULL, NULL, {0} },
         { "restart", on_restart_app, NULL, NULL, NULL, {0} },
-        { "lang_sys", on_lang_sys, NULL, NULL, NULL, {0} },
-        { "lang_en", on_lang_en, NULL, NULL, NULL, {0} },
-        { "lang_pt", on_lang_pt, NULL, NULL, NULL, {0} },
-        { "lang_es", on_lang_es, NULL, NULL, NULL, {0} },
-        { "lang_ru", on_lang_ru, NULL, NULL, NULL, {0} },
-        { "lang_zh", on_lang_zh, NULL, NULL, NULL, {0} },
-        { "theme_system", on_theme_system, NULL, NULL, NULL, {0} },
-        { "theme_light", on_theme_light, NULL, NULL, NULL, {0} },
-        { "theme_dark", on_theme_dark, NULL, NULL, NULL, {0} },
+        { "preferences", on_preferences, NULL, NULL, NULL, {0} },
+        { "keyboard_shortcuts", on_keyboard_shortcuts, NULL, NULL, NULL, {0} },
+        { "toggle_theme", on_toggle_theme, NULL, NULL, NULL, {0} },
+        { "copy_tech_sheet", on_copy_tech_sheet, NULL, NULL, NULL, {0} },
     };
     g_action_map_add_action_entries(G_ACTION_MAP(actions), entries, G_N_ELEMENTS(entries), NULL);
     gtk_widget_insert_action_group(app_data.window, "win", G_ACTION_GROUP(actions));
 
     app_data.main_menu = g_menu_new();
-    app_data.lang_section = g_menu_new();
-    rebuild_language_menu();
-    app_data.theme_section = g_menu_new();
-    rebuild_theme_menu();
-
-    GMenu *lang_menu = g_menu_new();
-    g_menu_append_submenu(lang_menu, _("Language"), G_MENU_MODEL(app_data.lang_section));
-    GMenu *theme_menu = g_menu_new();
-    g_menu_append_submenu(theme_menu, _("Theme"), G_MENU_MODEL(app_data.theme_section));
-
-    g_menu_append_section(app_data.main_menu, NULL, G_MENU_MODEL(lang_menu));
-    g_menu_append_section(app_data.main_menu, NULL, G_MENU_MODEL(theme_menu));
+    g_menu_append(app_data.main_menu, _("Preferences"), "win.preferences");
+    g_menu_append(app_data.main_menu, _("Keyboard Shortcuts"), "win.keyboard_shortcuts");
     g_menu_append(app_data.main_menu, _("About"), "win.about");
     g_menu_append(app_data.main_menu, _("Donate"), "win.donate");
 
@@ -280,7 +299,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
     adw_button_content_set_icon_name(ADW_BUTTON_CONTENT(scan_content), "view-refresh-symbolic");
     adw_button_content_set_label(ADW_BUTTON_CONTENT(scan_content), _("Scan"));
     gtk_button_set_child(GTK_BUTTON(btn_scan), scan_content);
-    gtk_widget_set_size_request(btn_scan, -1, 34);
     gtk_widget_add_css_class(btn_scan, "suggested-action");
     g_signal_connect(btn_scan, "clicked", G_CALLBACK(on_scan_clicked), NULL);
 
@@ -329,6 +347,15 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_list_box_row_set_activatable(GTK_LIST_BOX_ROW(app_data.row_tech_version), FALSE);
     adw_preferences_group_add(ADW_PREFERENCES_GROUP(app_data.status_group), app_data.row_tech_version);
 
+    app_data.row_tech_playstation = adw_action_row_new();
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(app_data.row_tech_playstation), _("Licensed Playstation Accessory"));
+    adw_action_row_set_subtitle(ADW_ACTION_ROW(app_data.row_tech_playstation), _("Yes"));
+    gtk_widget_set_tooltip_text(app_data.row_tech_playstation,
+        _("This device may use Bluetooth technologies licensed by Sony Interactive Entertainment."));
+    gtk_list_box_row_set_activatable(GTK_LIST_BOX_ROW(app_data.row_tech_playstation), FALSE);
+    gtk_widget_set_visible(app_data.row_tech_playstation, FALSE);
+    adw_preferences_group_add(ADW_PREFERENCES_GROUP(app_data.status_group), app_data.row_tech_playstation);
+
     app_data.fixes_group = adw_preferences_group_new();
     adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(app_data.fixes_group), _("System Fixes"));
     adw_preferences_group_set_description(ADW_PREFERENCES_GROUP(app_data.fixes_group),
@@ -361,7 +388,6 @@ static void activate(GtkApplication *app, gpointer user_data) {
         GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
         GtkWidget *info = gtk_button_new_from_icon_name("dialog-information-symbolic");
         gtk_widget_add_css_class(info, "flat");
-        gtk_widget_set_size_request(info, -1, 34);
         g_signal_connect(info, "clicked", rows[i].info, NULL);
 
         GtkWidget *sp, *lbl;
@@ -400,6 +426,15 @@ static void activate(GtkApplication *app, gpointer user_data) {
     }
 
     check_for_updates(app_data.update_btn);
+
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "win.preferences", (const char *[]){"<Primary>P", NULL});
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "win.keyboard_shortcuts", (const char *[]){"F1", NULL});
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "win.toggle_theme", (const char *[]){"F12", NULL});
+    gtk_application_set_accels_for_action(GTK_APPLICATION(app), "win.copy_tech_sheet", (const char *[]){"<Primary><Shift>C", NULL});
+
+    GtkEventControllerKey *key_ctrl = GTK_EVENT_CONTROLLER_KEY(gtk_event_controller_key_new());
+    g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_key_pressed), NULL);
+    gtk_widget_add_controller(app_data.window, GTK_EVENT_CONTROLLER(key_ctrl));
 
     gtk_window_present(GTK_WINDOW(app_data.window));
 }

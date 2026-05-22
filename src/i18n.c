@@ -149,6 +149,66 @@ static const TransEntry trans_table[] = {
     {"Follow System Theme",                  "Usar o tema do sistema",             "Usar el tema del sistema",            "\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u0442\u0435\u043c\u0443 \u0441\u0438\u0441\u0442\u0435\u043c\u044b",           "\u8ddf\u968f\u7cfb\u7edf\u4e3b\u9898"},
     {"Light Theme",                          "Tema claro",                         "Tema claro",                          "\u0421\u0432\u0435\u0442\u043b\u0430\u044f \u0442\u0435\u043c\u0430",                        "\u6d45\u8272\u4e3b\u9898"},
     {"Dark Theme",                           "Tema escuro",                        "Tema oscuro",                         "\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430",                         "\u6df1\u8272\u4e3b\u9898"},
+
+    {"Keyboard Shortcuts",                   "Atalhos do Teclado",                 "Atajos del Teclado",                  "\u0413\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438",              "\u5feb\u6377\u952e"},
+    {"Technical data copied",                "Dados t\u00e9cnicos copiados",         "Datos t\u00e9cnicos copiados",          "\u0422\u0435\u0445\u043d\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u044b", "\u6280\u672f\u6570\u636e\u5df2\u590d\u5236"},
+    {"Preferences",                          "Prefer\u00eancias",                      "Preferencias",                        "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438",                    "\u8bbe\u7f6e"},
+    {"Yes",                                  "Sim",                                 "S\u00ed",                                 "\u0414\u0430",                                  "\u662f"},
+    {"Yes, for PlayStation\u00ae3",           "Sim, para PlayStation\u00ae3",           "S\u00ed, para PlayStation\u00ae3",           "\u0414\u0430, \u0434\u043b\u044f PlayStation\u00ae3",           "\u662f\uff0c\u9488\u5bf9PlayStation\u00ae3"},
+    {"Licensed Playstation Accessory",       "Acess\u00f3rio Playstation Licenciado",   "Accesorio Playstation Licenciado",    "\u041b\u0438\u0446\u0435\u043d\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u0430\u043a\u0441\u0435\u0441\u0441\u0443\u0430\u0440 Playstation", "\u6388\u6743PlayStation\u914d\u4ef6"},
+    {"The possible manufacturer name of the board on the device, not the retail brand.",
+                                             "O nome do fabricante do chip Bluetooth no dispositivo, n\u00e3o a marca do produto final.",
+                                                                                    "El nombre del fabricante del chip Bluetooth en el dispositivo, no la marca del producto final.",
+                                                                                                                                        "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0438\u0442\u0435\u043b\u044f \u043c\u0438\u043a\u0440\u043e\u0441\u0445\u0435\u043c\u044b Bluetooth \u0432 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0435, \u0430 \u043d\u0435 \u0442\u043e\u0440\u0433\u043e\u0432\u0430\u044f \u043c\u0430\u0440\u043a\u0430.",  "\u8bbe\u5907\u4e0a Bluetooth \u82af\u7247\u7684\u53ef\u80fd\u5236\u9020\u5546\u540d\u79f0\uff0c\u800c\u975e\u96f6\u552e\u54c1\u724c\u3002"},
+    {"This device may use Bluetooth technologies licensed by Sony Interactive Entertainment.",
+                                             "Este dispositivo usa tecnologias Bluetooth licenciadas pela Sony Interactive Entertainment.",
+                                                                                    "Este dispositivo puede usar tecnolog\u00edas Bluetooth licenciadas por Sony Interactive Entertainment.",
+                                                                                                                                        "\u042d\u0442\u043e \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u043c\u043e\u0436\u0435\u0442 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u0442\u0435\u0445\u043d\u043e\u043b\u043e\u0433\u0438\u0438 Bluetooth, \u043b\u0438\u0446\u0435\u043d\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 Sony Interactive Entertainment.", "\u6b64\u8bbe\u5907\u53ef\u80fd\u4f7f\u7528\u7531Sony Interactive Entertainment\u6388\u6743\u7684\u84dd\u7259\u6280\u672f\u3002"},
+    {"Enter password for Bluetooth fixes:",  "Digite a senha para corre\u00e7\u00f5es Bluetooth:",
+                                                                                    "Ingrese la contrase\u00f1a para correcciones Bluetooth:",
+                                                                                                                                        "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043f\u0430\u0440\u043e\u043b\u044c \u0434\u043b\u044f \u0438\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0439 Bluetooth:", "\u8bf7\u8f93\u5165\u84dd\u7259\u4fee\u590d\u5bc6\u7801\uff1a"},
+    {"Recommended for CSR and Barrot/Generic dongles. Stabilizes the radio to fix detection and connection loops.",
+                                             "Recomendado para dongles CSR e Barrot/Generic. Estabiliza o r\u00e1dio Bluetooth para corrigir loops de detec\u00e7\u00e3o e conex\u00e3o.",
+                                                                                    "Recomendado para dongles CSR y Barrot/Generic. Estabiliza la radio Bluetooth para corregir bucles de detecci\u00f3n y conexi\u00f3n.",
+                                                                                                                                        "\u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u0442\u0441\u044f \u0434\u043b\u044f \u0434\u043e\u043d\u0433\u043b\u043e\u0432 CSR \u0438 Barrot/Generic. \u0421\u0442\u0430\u0431\u0438\u043b\u0438\u0437\u0438\u0440\u0443\u0435\u0442 \u0440\u0430\u0431\u043e\u0442\u0443 \u0440\u0430\u0434\u0438\u043e\u043c\u043e\u0434\u0443\u043b\u044f \u0434\u043b\u044f \u0443\u0441\u0442\u0440\u0430\u043d\u0435\u043d\u0438\u044f \u043f\u0440\u043e\u0431\u043b\u0435\u043c \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u0438\u044f \u0438 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f.", "\u5efa\u8bae\u7528\u4e8eCSR\u548cBarrot/Generic\u914d\u4ef6\u3002\u7a33\u5b9a\u65e0\u7ebf\u7535\u4ee5\u4fee\u590d\u68c0\u6d4b\u548c\u8fde\u63a5\u95ee\u9898\u3002"},
+    {"Fixes automatic disconnections of modern Bluetooth gamepads.",
+                                             "Corrige desconex\u00f5es autom\u00e1ticas de gamepads Bluetooth modernos.",
+                                                                                    "Corrige desconexiones autom\u00e1ticas de gamepads Bluetooth modernos.",
+                                                                                                                                        "\u0418\u0441\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u043e\u0442\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u0441\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445 \u0438\u0433\u0440\u043e\u0432\u044b\u0445 \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u043b\u0435\u0440\u043e\u0432 Bluetooth.", "\u4fee\u590d\u73b0\u4ee3\u84dd\u7259\u6e38\u620f\u624b\u67c4\u7684\u81ea\u52a8\u65ad\u5f00\u8fde\u63a5\u95ee\u9898\u3002"},
+    {"Allows old Bluetooth devices to pair with a fixed PIN.",
+                                             "Permite que dispositivos Bluetooth antigos pareiem com um PIN fixo.",
+                                                                                    "Permite que dispositivos Bluetooth antiguos se emparejen con un PIN fijo.",
+                                                                                                                                        "\u041f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u0441\u0442\u0430\u0440\u044b\u043c Bluetooth-\u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430\u043c \u0441\u043e\u043f\u0440\u044f\u0433\u0430\u0442\u044c\u0441\u044f \u0441 \u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u043c PIN-\u043a\u043e\u0434\u043e\u043c.", "\u5141\u8bb8\u65e7\u84dd\u7259\u8bbe\u5907\u4f7f\u7528\u56fa\u5b9aPIN\u8fdb\u884c\u914d\u5bf9\u3002"},
+    {"Downloads and injects the missing official driver binaries.",
+                                             "Baixa e injeta os drivers oficiais ausentes.",
+                                                                                    "Descarga e inyecta los controladores oficiales faltantes.",
+                                                                                                                                        "\u0421\u043a\u0430\u0447\u0438\u0432\u0430\u0435\u0442 \u0438 \u0443\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u0442 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0438\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0435 \u0434\u0440\u0430\u0439\u0432\u0435\u0440\u044b.", "\u4e0b\u8f7d\u5e76\u6ce8\u5165\u7f3a\u5931\u7684\u5b98\u65b9\u9a71\u52a8\u7a0b\u5e8f\u3002"},
+    {"Downloads and extracts the missing proprietary firmware for Broadcom chipsets.",
+                                             "Baixa e extrai o firmware propriet\u00e1rio ausente para chipsets Broadcom.",
+                                                                                    "Descarga y extrae el firmware propietario faltante para chipsets Broadcom.",
+                                                                                                                                        "\u0421\u043a\u0430\u0447\u0438\u0432\u0430\u0435\u0442 \u0438 \u0438\u0437\u0432\u043b\u0435\u043a\u0430\u0435\u0442 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0443\u044e \u043f\u0440\u043e\u043f\u0440\u0438\u0435\u0442\u0430\u0440\u043d\u0443\u044e \u043f\u0440\u043e\u0448\u0438\u0432\u043a\u0443 \u0434\u043b\u044f \u0447\u0438\u043f\u0441\u0435\u0442\u043e\u0432 Broadcom.", "\u4e0b\u8f7d\u5e76\u63d0\u53d6\u7f3a\u5931\u7684Broadcom\u82af\u7247\u7ec4\u4e13\u6709\u56fa\u4ef6\u3002"},
+    {"Forces activation of adapters stuck in Airplane Mode.",
+                                             "For\u00e7a a ativa\u00e7\u00e3o de adaptadores presos no modo avi\u00e3o.",
+                                                                                    "Fuerza la activaci\u00f3n de adaptadores bloqueados en modo avi\u00f3n.",
+                                                                                                                                        "\u041f\u0440\u0438\u043d\u0443\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0432\u043a\u043b\u044e\u0447\u0430\u0435\u0442 \u0430\u0434\u0430\u043f\u0442\u0435\u0440\u044b, \u0437\u0430\u0441\u0442\u0440\u044f\u0432\u0448\u0438\u0435 \u0432 \u0440\u0435\u0436\u0438\u043c\u0435 \u043f\u043e\u043b\u0451\u0442\u0430.", "\u5f3a\u5236\u6fc0\u6d3b\u5361\u5728\u98de\u884c\u6a21\u5f0f\u4e2d\u7684\u9002\u914d\u5668\u3002"},
+    {"Adds the user to the lp group for Bluetooth D-Bus access.",
+                                             "Adiciona o usu\u00e1rio ao grupo lp para acesso Bluetooth via D-Bus.",
+                                                                                    "Agrega el usuario al grupo lp para acceso Bluetooth v\u00eda D-Bus.",
+                                                                                                                                        "\u0414\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u0442 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f \u0432 \u0433\u0440\u0443\u043f\u043f\u0443 lp \u0434\u043b\u044f \u0434\u043e\u0441\u0442\u0443\u043f\u0430 \u043a Bluetooth \u0447\u0435\u0440\u0435\u0437 D-Bus.", "\u5c06\u7528\u6237\u6dfb\u52a0\u5230lp\u7ec4\u4ee5\u83b7\u53d6\u901a\u8fc7D-Bus\u8bbf\u95ee\u84dd\u7259\u7684\u6743\u9650\u3002"},
+    {"Removes all pairing caches to fix connection errors.",
+                                             "Remove todos os caches de pareamento para corrigir erros de conex\u00e3o.",
+                                                                                    "Elimina todos los cach\u00e9s de emparejamiento para corregir errores de conexi\u00f3n.",
+                                                                                                                                        "\u0423\u0434\u0430\u043b\u044f\u0435\u0442 \u0432\u0441\u0435 \u043a\u044d\u0448\u0438 \u0441\u043e\u043f\u0440\u044f\u0436\u0435\u043d\u0438\u044f \u0434\u043b\u044f \u0438\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u043e\u0448\u0438\u0431\u043e\u043a \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f.", "\u5220\u9664\u6240\u6709\u914d\u5bf9\u7f13\u5b58\u4ee5\u4fee\u590d\u8fde\u63a5\u9519\u8bef\u3002"},
+    {"Clears caches and buffers by restarting the system service.",
+                                             "Limpa caches e buffers reiniciando o servi\u00e7o do sistema.",
+                                                                                    "Limpia cach\u00e9s y b\u00faferes reiniciando el servicio del sistema.",
+                                                                                                                                        "\u041e\u0447\u0438\u0449\u0430\u0435\u0442 \u043a\u044d\u0448\u0438 \u0438 \u0431\u0443\u0444\u0435\u0440\u044b \u043f\u0443\u0442\u0451\u043c \u043f\u0435\u0440\u0435\u0437\u0430\u043f\u0443\u0441\u043a\u0430 \u0441\u043b\u0443\u0436\u0431\u044b \u0441\u0438\u0441\u0442\u0435\u043c\u044b.", "\u901a\u8fc7\u91cd\u542f\u7cfb\u7edf\u670d\u52a1\u6765\u6e05\u9664\u7f13\u5b58\u548c\u7f13\u51b2\u533a\u3002"},
+    {"No technical data to copy",            "N\u00e3o h\u00e1 dados t\u00e9cnicos para copiar",
+                                                                                   "No hay datos t\u00e9cnicos para copiar",
+                                                                                                                           "\u041d\u0435\u0442 \u0442\u0435\u0445\u043d\u0438\u0447\u0435\u0441\u043a\u0438\u0445 \u0434\u0430\u043d\u043d\u044b\u0445 \u0434\u043b\u044f \u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f", "\u6ca1\u6709\u53ef\u590d\u5236\u7684\u6280\u672f\u6570\u636e"},
+    {"/var/lib/bluetooth not found",          "/var/lib/bluetooth n\u00e3o encontrado",
+                                                                                   "/var/lib/bluetooth no encontrado",
+                                                                                                                           "/var/lib/bluetooth \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430", "/var/lib/bluetooth \u672a\u627e\u5230"},
 };
 
 LangId current_lang = LANG_SYS;
@@ -233,28 +293,6 @@ const char* lang_label(LangId id) {
     }
 }
 
-void rebuild_language_menu(void) {
-    if (!app_data.lang_section) return;
-    int n = g_menu_model_get_n_items(G_MENU_MODEL(app_data.lang_section));
-    for (int i = n - 1; i >= 0; i--)
-        g_menu_remove(app_data.lang_section, i);
-
-    struct { LangId id; const char *action; } entries[] = {
-        {LANG_SYS, "win.lang_sys"},
-        {LANG_EN,  "win.lang_en"},
-        {LANG_PT,  "win.lang_pt"},
-        {LANG_ES,  "win.lang_es"},
-        {LANG_RU,  "win.lang_ru"},
-        {LANG_ZH,  "win.lang_zh"},
-    };
-    for (size_t i = 0; i < G_N_ELEMENTS(entries); i++) {
-        char label[128];
-        g_snprintf(label, sizeof(label), "%s %s",
-            entries[i].id == current_lang ? "\u2713" : " ", lang_label(entries[i].id));
-        g_menu_append(app_data.lang_section, label, entries[i].action);
-    }
-}
-
 void set_language(LangId lang) {
     if (current_lang == lang) return;
     current_lang = lang;
@@ -262,7 +300,6 @@ void set_language(LangId lang) {
     g_mkdir_with_parents(dir, 0755);
     g_autofree char *cfg = g_build_filename(dir, "language", NULL);
     g_file_set_contents(cfg, lang_code(lang), -1, NULL);
-    rebuild_language_menu();
     AdwToast *toast = adw_toast_new(_("Please restart the application to apply the language change."));
     adw_toast_set_button_label(toast, _("Restart"));
     adw_toast_set_action_name(toast, "win.restart");

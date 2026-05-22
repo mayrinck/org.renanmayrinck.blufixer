@@ -1,8 +1,10 @@
 APP_ID     := org.renanmayrinck.blufixer
-VERSION    := 1.6.0
+MOCK ?= 0
+VERSION := 1.6.0
 TARGET     := blufixer
 SRCDIR     := src
 SOURCES    := $(wildcard $(SRCDIR)/*.c)
+DEPFILES   := $(SOURCES:.c=.d)
 
 PREFIX     ?= /usr/local
 BINDIR     := $(DESTDIR)$(PREFIX)/bin
@@ -13,16 +15,22 @@ METADIR    := $(DESTDIR)$(PREFIX)/share/metainfo
 
 PKGS       := gtk4 libadwaita-1
 CFLAGS     ?= -O2 -g
-CFLAGS     += $(shell pkg-config --cflags $(PKGS)) -DVERSION=\"$(VERSION)\" -DAPP_ID=\"$(APP_ID)\" -I$(SRCDIR)
+CFLAGS     += $(shell pkg-config --cflags $(PKGS)) -DVERSION=\"$(VERSION)\" -DAPP_ID=\"$(APP_ID)\" -I$(SRCDIR) $(if $(filter 1,$(MOCK)),-DMOCK_DEVICES,)
 LDFLAGS    ?=
 LDFLAGS    += $(shell pkg-config --libs $(PKGS))
 
 ARCH       := $(shell uname -m)
 DEBARCH    := $(shell dpkg-architecture -q DEB_BUILD_ARCH 2>/dev/null || echo "amd64")
 
-.PHONY: all clean install uninstall dist rpm deb rpm-mock flatpak flatpak-bundle
+.PHONY: all clean install uninstall dist rpm deb rpm-mock flatpak flatpak-bundle test
 
 all: $(TARGET)
+
+# Dependency tracking
+%.d: %.c
+	$(CC) -MM -MT "$(@:.d=.o)" $(CFLAGS) $< -o $@
+
+-include $(DEPFILES)
 
 $(TARGET): $(SOURCES)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
@@ -59,6 +67,21 @@ uninstall:
 clean:
 	rm -f $(TARGET)
 	rm -rf build
+	rm -f $(DEPFILES)
+
+test: $(TARGET)
+	@if command -v xvfb-run >/dev/null 2>&1; then \
+		printf '>>> Running smoke test with xvfb-run...\n'; \
+		xvfb-run -a ./$(TARGET) & \
+		PID=$$!; \
+		sleep 2; \
+		kill $$PID 2>/dev/null; \
+		wait $$PID 2>/dev/null || true; \
+		printf '>>> Smoke test complete.\n'; \
+	else \
+		printf '>>> xvfb-run not found. Skipping smoke test.\n'; \
+		printf '>>> Install xvfb-run (apt: xvfb, dnf: xorg-x11-server-Xvfb)\n'; \
+	fi
 
 # Binary tarball — contains pre-compiled executable for direct use
 dist: $(TARGET) | build
@@ -170,20 +193,7 @@ deb: $(TARGET) | build
 	install -m 0644 hicolor/scalable/apps/$(APP_ID).svg /tmp/pkg-deb/usr/share/icons/hicolor/scalable/apps/
 	install -m 0755 debian/postinst /tmp/pkg-deb/DEBIAN/postinst
 	install -m 0755 debian/postrm /tmp/pkg-deb/DEBIAN/postrm
-	printf 'Package: blufixer\n' > /tmp/pkg-deb/DEBIAN/control
-	printf 'Version: $(VERSION)-1\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf 'Architecture: $(DEBARCH)\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf 'Maintainer: Renan Mayrinck <renan@mayrinck.com>\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf 'Section: utils\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf 'Priority: optional\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf 'Depends: libadwaita-1-0 (>= 1.0),\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf '         libgtk-4-1 (>= 4.0),\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf '         libglib2.0-0 (>= 2.80),\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf '         libc6 (>= 2.38),\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf '         policykit-1\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf 'Description: Bluetooth troubleshooting utility for Linux\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf ' BluFixer helps diagnose and fix common Bluetooth issues on Linux\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf ' desktops including CSR Energy Management, ERTM, Realtek/Broadcom\n' >> /tmp/pkg-deb/DEBIAN/control
-	printf ' firmware, and Legacy pairing mode.\n' >> /tmp/pkg-deb/DEBIAN/control
+	sed 's/@VERSION@/$(VERSION)/g; s/@ARCH@/$(DEBARCH)/g' \
+		debian/control > /tmp/pkg-deb/DEBIAN/control
 	dpkg-deb --build --root-owner-group /tmp/pkg-deb build/BluFixer-$(VERSION)-$(DEBARCH).deb
 	@printf '\nCreated build/BluFixer-$(VERSION)-$(DEBARCH).deb\n'

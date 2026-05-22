@@ -17,10 +17,7 @@ void show_info_dialog(const char *body_markup) {
 }
 
 const char* dialog_color(void) {
-    static char buf[8];
-    gboolean dark = adw_style_manager_get_dark(adw_style_manager_get_default());
-    g_strlcpy(buf, dark ? "#00ffff" : "#00008b", sizeof(buf));
-    return buf;
+    return adw_style_manager_get_dark(adw_style_manager_get_default()) ? "#00ffff" : "#00008b";
 }
 
 void show_info_markup(const char *fmt, ...) {
@@ -44,7 +41,7 @@ void on_info_copy_activated(AdwActionRow *row, gpointer user_data) {
 void on_info_csr_clicked(GtkButton *btn, gpointer user_data) {
     const char *c = dialog_color();
     show_info_markup(
-        "<b>CSR Power Fix (Connection/Reconnection)</b>\n\n"
+        "<b>%s</b>\n\n"
         "%s\n"
         "<span font_family='monospace' foreground='%s'>%s</span>\n"
         "<span font_family='monospace' foreground='%s'>%s</span>\n"
@@ -54,6 +51,11 @@ void on_info_csr_clicked(GtkButton *btn, gpointer user_data) {
         "<span font_family='monospace' foreground='%s'>%s</span>\n\n"
         "%s\n"
         "<span font_family='monospace' foreground='%s'>%s</span>",
+        info5("CSR Power Fix (Connection/Reconnection)",
+              "Corre\u00e7\u00e3o de Energia CSR (Conex\u00e3o/Reconex\u00e3o)",
+              "Correcci\u00f3n de Energ\u00eda CSR (Conexi\u00f3n/Reconexi\u00f3n)",
+              "\u0418\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u044d\u043d\u0435\u0440\u0433\u043e\u043f\u043e\u0442\u0440\u0435\u0431\u043b\u0435\u043d\u0438\u044f CSR (\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435/\u041f\u0435\u0440\u0435\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435)",
+              "CSR\u7535\u6e90\u4fee\u590d\uff08\u8fde\u63a5/\u91cd\u65b0\u8fde\u63a5\uff09"),
         info5("Bluetooth devices with CSR (Cambridge Silicon Radio) chipsets have a low-power mode that, after initial pairing, keeps the BLE profile active. This prevents new profiles (such as A2DP for audio) from being negotiated correctly, resulting in:",
             "Dispositivos Bluetooth com chipset CSR (Cambridge Silicon Radio) possuem um modo de baixo consumo que, ap\u00f3s o pareamento inicial, mant\u00e9m o perfil de baixa energia (BLE) ativo. Isso impede que novos perfis (como A2DP para \u00e1udio) sejam negociados corretamente, resultando em:",
             "Los dispositivos Bluetooth con chipsets CSR (Cambridge Silicon Radio) tienen un modo de bajo consumo que, tras el emparejamiento inicial, mantiene el perfil BLE activo. Esto impide que nuevos perfiles (como A2DP para audio) se negocien correctamente, resultando en:",
@@ -76,11 +78,10 @@ void on_info_csr_clicked(GtkButton *btn, gpointer user_data) {
             "\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440 enable_autosuspend \u0443\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442, \u0440\u0430\u0437\u0440\u0435\u0448\u0430\u0435\u0442 \u043b\u0438 \u0434\u0440\u0430\u0439\u0432\u0435\u0440 btusb \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044e \u0432\u0445\u043e\u0434\u0438\u0442\u044c \u0432 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 D3 (\u043f\u0440\u0438\u043e\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0430) \u043f\u0440\u0438 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0438\u0438 \u0442\u0440\u0430\u0444\u0438\u043a\u0430. \u0427\u0438\u043f\u044b CSR Bluetooth \u043e\u0441\u043e\u0431\u0435\u043d\u043d\u043e \u0443\u044f\u0437\u0432\u0438\u043c\u044b, \u043f\u043e\u0442\u043e\u043c\u0443 \u0447\u0442\u043e \u0438\u0445 \u043f\u0440\u043e\u0448\u0438\u0432\u043a\u0430 \u043d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u043e \u043f\u0435\u0440\u0435\u043d\u0430\u0441\u0442\u0440\u0430\u0438\u0432\u0430\u0435\u0442 \u043f\u0440\u043e\u0444\u0438\u043b\u0438 \u043f\u0440\u0438 \u0432\u044b\u0445\u043e\u0434\u0435 \u0438\u0437 \u043f\u0440\u0438\u043e\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u044f.",
             "enable_autosuspend\u53c2\u6570\u63a7\u5236btusb\u9a71\u52a8\u7a0b\u5e8f\u662f\u5426\u5141\u8bb8\u786c\u4ef6\u5728\u65e0\u6d41\u91cf\u65f6\u8fdb\u5165D3\uff08\u6302\u8d77\uff09\u72b6\u6001\u3002CSR\u84dd\u7259\u82af\u7247\u53d7\u5f71\u54cd\u7279\u522b\u5927\uff0c\u56e0\u4e3a\u5176\u56fa\u4ef6\u5728\u79bb\u5f00\u6302\u8d77\u72b6\u6001\u65f6\u65e0\u6cd5\u6b63\u786e\u91cd\u65b0\u534f\u5546\u914d\u7f6e\u6587\u4ef6\u3002"));
 }
-
 void on_info_ertm_clicked(GtkButton *btn, gpointer user_data) {
     const char *c = dialog_color();
     show_info_markup(
-        "<b>ERTM Fix (Enhanced Re-Transmission Mode)</b>\n\n"
+        "<b>%s</b>\n\n"
         "%s\n"
         "<span font_family='monospace' foreground='%s'>%s</span>\n"
         "<span font_family='monospace' foreground='%s'>%s</span>\n"
@@ -89,6 +90,11 @@ void on_info_ertm_clicked(GtkButton *btn, gpointer user_data) {
         "%s\n"
         "<span font_family='monospace' foreground='%s'>%s</span>\n\n"
         "%s",
+        info5("ERTM Fix (Enhanced Re-Transmission Mode)",
+              "Correção ERTM (Modo de Retransmissão Avançada)",
+              "Corrección ERTM (Modo de Retransmisión Mejorada)",
+              "Исправление ERTM (Улучшенный режим повторной передачи)",
+              "ERTM修复（增强重传模式）"),
         info5("ERTM is a Bluetooth protocol feature that ensures reliable data delivery via retransmission. In some chipsets, especially Intel and Broadcom, the ERTM implementation is problematic and causes:",
             "O ERTM \u00e9 um recurso do protocolo Bluetooth que garante entrega confi\u00e1vel de dados via retransmiss\u00e3o. Em alguns chipsets, especialmente Intel e Broadcom, a implementa\u00e7\u00e3o do ERTM \u00e9 problem\u00e1tica e causa:",
             "ERTM es una caracter\u00edstica del protocolo Bluetooth que garantiza la entrega confiable de datos mediante retransmisi\u00f3n. En algunos conjuntos de chips, especialmente Intel y Broadcom, la implementaci\u00f3n de ERTM es problem\u00e1tica y causa:",
@@ -292,4 +298,111 @@ void on_info_cache_clicked(GtkButton *btn, gpointer user_data) {
             "Atenci\u00f3n: Todos los dispositivos emparejados se eliminar\u00e1n y ser\u00e1 necesario emparejarlos de nuevo.",
             "\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435: \u0412\u0441\u0435 \u0441\u043e\u043f\u0440\u044f\u0436\u0451\u043d\u043d\u044b\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430 \u0431\u0443\u0434\u0443\u0442 \u0443\u0434\u0430\u043b\u0435\u043d\u044b, \u0438 \u0438\u0445 \u043f\u0440\u0438\u0434\u0451\u0442\u0441\u044f \u0441\u043e\u043f\u0440\u044f\u0433\u0430\u0442\u044c \u0437\u0430\u043d\u043e\u0432\u043e.",
             "\u6ce8\u610f\uff1a\u6240\u6709\u5df2\u914d\u5bf9\u7684\u8bbe\u5907\u5c06\u88ab\u5220\u9664\uff0c\u5e76\u9700\u8981\u91cd\u65b0\u914d\u5bf9\u3002"));
+}
+
+void show_keyboard_shortcuts(void) {
+    show_info_dialog(info5(
+        "<b>Keyboard Shortcuts</b>\n\n"
+        "<tt>F1</tt>           Open keyboard shortcuts\n"
+        "<tt>F5</tt>           Scan for Bluetooth devices (Home screen)\n"
+        "<tt>F12</tt>          Toggle light/dark theme\n"
+        "<tt>Ctrl+Shift+C</tt> Copy tech sheet data (Details page)",
+        "<b>Atalhos do Teclado</b>\n\n"
+        "<tt>F1</tt>           Abrir os atalhos do teclado\n"
+        "<tt>F5</tt>           Escanear dispositivos Bluetooth (tela inicial)\n"
+        "<tt>F12</tt>          Alternar tema claro/escuro\n"
+        "<tt>Ctrl+Shift+C</tt> Copiar dados t\u00e9cnicos (p\u00e1gina de detalhes)",
+        "<b>Atajos del Teclado</b>\n\n"
+        "<tt>F1</tt>           Abrir atajos del teclado\n"
+        "<tt>F5</tt>           Escanear dispositivos Bluetooth (pantalla inicial)\n"
+        "<tt>F12</tt>          Alternar tema claro/oscuro\n"
+        "<tt>Ctrl+May\u00fas+C</tt> Copiar datos t\u00e9cnicos (p\u00e1gina de detalles)",
+        "<b>\u0413\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438</b>\n\n"
+        "<tt>F1</tt>           \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0433\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438\n"
+        "<tt>F5</tt>           \u0421\u043a\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430 Bluetooth (\u0413\u043b\u0430\u0432\u043d\u044b\u0439 \u044d\u043a\u0440\u0430\u043d)\n"
+        "<tt>F12</tt>          \u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0432\u0435\u0442\u043b\u0443\u044e/\u0442\u0435\u043c\u043d\u0443\u044e \u0442\u0435\u043c\u0443\n"
+        "<tt>Ctrl+Shift+C</tt> \u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0442\u0435\u0445\u043d\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 (\u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u0434\u0435\u0442\u0430\u043b\u0435\u0439)",
+        "<b>\u5feb\u6377\u952e</b>\n\n"
+        "<tt>F1</tt>           \u6253\u5f00\u5feb\u6377\u952e\n"
+        "<tt>F5</tt>           \u626b\u63cf\u84dd\u7259\u8bbe\u5907\uff08\u4e3b\u5c4f\u5e55\uff09\n"
+        "<tt>F12</tt>          \u5207\u6362\u6d45\u8272/\u6df1\u8272\u4e3b\u9898\n"
+        "<tt>Ctrl+Shift+C</tt> \u590d\u5236\u6280\u672f\u6570\u636e\uff08\u8be6\u60c5\u9875\uff09"
+    ));
+}
+
+static void on_prefs_lang_selected(GObject *obj, GParamSpec *pspec, gpointer d) {
+    LangId ids[] = {LANG_SYS, LANG_EN, LANG_PT, LANG_ES, LANG_RU, LANG_ZH};
+    guint sel = gtk_drop_down_get_selected(GTK_DROP_DOWN(obj));
+    if (sel < G_N_ELEMENTS(ids))
+        set_language(ids[sel]);
+}
+
+static void on_prefs_theme_selected(GObject *obj, GParamSpec *pspec, gpointer d) {
+    guint sel = gtk_drop_down_get_selected(GTK_DROP_DOWN(obj));
+    if (sel <= THEME_DARK)
+        set_theme((ThemeId)sel);
+}
+
+void show_preferences_dialog(void) {
+    AdwAlertDialog *dialog = ADW_ALERT_DIALOG(adw_alert_dialog_new(_("Preferences"), NULL));
+
+    GtkWidget *page = adw_preferences_page_new();
+
+    GtkWidget *group = adw_preferences_group_new();
+    adw_preferences_page_add(ADW_PREFERENCES_PAGE(page), ADW_PREFERENCES_GROUP(group));
+
+    /* Language row */
+    GtkWidget *lang_row = adw_action_row_new();
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(lang_row), _("Language"));
+    adw_action_row_set_subtitle(ADW_ACTION_ROW(lang_row), info5(
+        "Choose the interface language. Restart required.",
+        "Escolha o idioma da interface. Reinicializa\u00e7\u00e3o necess\u00e1ria.",
+        "Elija el idioma de la interfaz. Requiere reinicio.",
+        "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u044f\u0437\u044b\u043a \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430. \u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u043f\u0435\u0440\u0435\u0437\u0430\u043f\u0443\u0441\u043a.",
+        "\u9009\u62e9\u754c\u9762\u8bed\u8a00\u3002\u9700\u8981\u91cd\u542f\u3002"));
+
+    GtkStringList *lang_model = gtk_string_list_new(NULL);
+    LangId lang_ids[] = {LANG_SYS, LANG_EN, LANG_PT, LANG_ES, LANG_RU, LANG_ZH};
+    for (size_t i = 0; i < G_N_ELEMENTS(lang_ids); i++)
+        gtk_string_list_append(lang_model, lang_label(lang_ids[i]));
+
+    GtkWidget *lang_dropdown = gtk_drop_down_new(G_LIST_MODEL(lang_model), NULL);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(lang_dropdown), current_lang);
+    g_signal_connect(lang_dropdown, "notify::selected", G_CALLBACK(on_prefs_lang_selected), NULL);
+    adw_action_row_add_suffix(ADW_ACTION_ROW(lang_row), lang_dropdown);
+    adw_preferences_group_add(ADW_PREFERENCES_GROUP(group), lang_row);
+
+    /* Theme row */
+    GtkWidget *theme_row = adw_action_row_new();
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(theme_row), _("Theme"));
+    adw_action_row_set_subtitle(ADW_ACTION_ROW(theme_row), info5(
+        "Switch between System, Light, or Dark theme.",
+        "Alternar entre tema Sistema, Claro ou Escuro.",
+        "Cambiar entre tema Sistema, Claro u Oscuro.",
+        "\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 \u0441\u0438\u0441\u0442\u0435\u043c\u043d\u043e\u0439, \u0441\u0432\u0435\u0442\u043b\u043e\u0439 \u0438 \u0442\u0435\u043c\u043d\u043e\u0439 \u0442\u0435\u043c\u043e\u0439.",
+        "\u5728\u7cfb\u7edf\u3001\u6d45\u8272\u6216\u6df1\u8272\u4e3b\u9898\u4e4b\u95f4\u5207\u6362\u3002"));
+
+    GtkStringList *theme_model = gtk_string_list_new(NULL);
+    gtk_string_list_append(theme_model, _("Follow System Theme"));
+    gtk_string_list_append(theme_model, _("Light Theme"));
+    gtk_string_list_append(theme_model, _("Dark Theme"));
+
+    GtkWidget *theme_dropdown = gtk_drop_down_new(G_LIST_MODEL(theme_model), NULL);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(theme_dropdown), current_theme);
+    g_signal_connect(theme_dropdown, "notify::selected", G_CALLBACK(on_prefs_theme_selected), NULL);
+    adw_action_row_add_suffix(ADW_ACTION_ROW(theme_row), theme_dropdown);
+    adw_preferences_group_add(ADW_PREFERENCES_GROUP(group), theme_row);
+
+    /* Size constraints: wrap page in a scrolled window */
+    GtkWidget *scroll = gtk_scrolled_window_new();
+    gtk_widget_set_size_request(scroll, 480, 480);
+    gtk_scrolled_window_set_max_content_width(GTK_SCROLLED_WINDOW(scroll), 540);
+    gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(scroll), 800);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
+
+    adw_alert_dialog_set_extra_child(dialog, scroll);
+    adw_alert_dialog_add_responses(dialog, "close", _("Close"), NULL);
+    adw_alert_dialog_set_default_response(dialog, "close");
+    adw_alert_dialog_set_close_response(dialog, "close");
+    adw_dialog_present(ADW_DIALOG(dialog), app_data.window);
 }

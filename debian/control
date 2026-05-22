@@ -12,9 +12,12 @@ Standards-Version: 4.7.0
 Homepage: https://github.com/mayrinck/blufixer
 
 Package: blufixer
-Architecture: any
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
+Version: @VERSION@-1
+Architecture: @ARCH@
+Depends: libadwaita-1-0 (>= 1.0),
+         libgtk-4-1 (>= 4.0),
+         libglib2.0-0 (>= 2.80),
+         libc6 (>= 2.38),
          policykit-1
 Description: Bluetooth troubleshooting utility for Linux
   BluFixer helps diagnose and fix common Bluetooth issues on Linux

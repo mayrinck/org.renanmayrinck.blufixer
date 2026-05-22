@@ -1,4 +1,6 @@
 blufixer
-build-dir/
-*.tar.gz
+src/*.o
+src/*.d
+build/
 *.flatpak
+/tmp/pkg-deb/

@@ -5,6 +5,22 @@ GtkWidget *scan_loader_row = NULL;
 gint scanning = FALSE;
 guint scan_timeout_id = 0;
 
+typedef struct { const char *vendor; const char *product; const char *label; const char *icon; } CategoryEntry;
+
+static const CategoryEntry* lookup_category(const char *vendor, const char *product) {
+    static const CategoryEntry table[] = {
+        {"12ba", "0030", "Headset", "audio-headset-symbolic"},
+        {"12ba", "0100", "Gamepad", "input-gaming-symbolic"},
+        {"12ba", "0210", "Gamepad", "input-gaming-symbolic"},
+    };
+    for (size_t i = 0; i < G_N_ELEMENTS(table); i++) {
+        if (g_strcmp0(vendor, table[i].vendor) == 0 &&
+            g_strcmp0(product, table[i].product) == 0)
+            return &table[i];
+    }
+    return NULL;
+}
+
 const char* detect_manufacturer(const char *vendor, const char *product, const char *desc) {
     if (g_strcmp0(vendor, "0a12") == 0) {
         if ((product && g_strcmp0(product, "0001") == 0) ||
@@ -13,11 +29,12 @@ const char* detect_manufacturer(const char *vendor, const char *product, const c
         return "CSR";
     }
     if (g_strcmp0(vendor, "0bda") == 0) return "Realtek";
-    if (g_strcmp0(vendor, "8087") == 0) return "Intel";
+    if (g_strcmp0(vendor, "8086") == 0 || g_strcmp0(vendor, "8087") == 0) return "Intel";
     if (g_strcmp0(vendor, "0cf3") == 0) return "Qualcomm / Atheros";
     if (g_strcmp0(vendor, "0a5c") == 0) return "Broadcom / Cypress";
-    if (g_strcmp0(vendor, "0e8d") == 0) return "MediaTek";
+    if (g_strcmp0(vendor, "0e8d") == 0 || g_strcmp0(vendor, "14c3") == 0) return "MediaTek";
     if (g_strcmp0(vendor, "148f") == 0) return "Ralink";
+    if (g_strcmp0(vendor, "12ba") == 0) return "Sony";
     return "Generic";
 }
 
@@ -57,17 +74,27 @@ static gboolean on_scan_finished(gpointer user_data) {
         gtk_widget_add_css_class(lbl_title, "device-title");
         gtk_widget_set_halign(lbl_title, GTK_ALIGN_START);
         gtk_label_set_ellipsize(GTK_LABEL(lbl_title), PANGO_ELLIPSIZE_END);
+        gtk_label_set_max_width_chars(GTK_LABEL(lbl_title), 32);
 
         GtkWidget *desc_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
         gtk_widget_set_halign(desc_box, GTK_ALIGN_START);
         gtk_widget_set_valign(desc_box, GTK_ALIGN_CENTER);
 
         GtkWidget *badge = create_brand_badge(d->manufacturer);
+        gtk_box_append(GTK_BOX(desc_box), badge);
+
+        const CategoryEntry *cat = lookup_category(d->vendor, d->product);
+        if (cat) {
+            GtkWidget *cat_icon = gtk_image_new_from_icon_name(cat->icon);
+            gtk_image_set_pixel_size(GTK_IMAGE(cat_icon), 14);
+            gtk_widget_set_valign(cat_icon, GTK_ALIGN_CENTER);
+            gtk_widget_set_tooltip_text(cat_icon, cat->label);
+            gtk_box_append(GTK_BOX(desc_box), cat_icon);
+        }
+
         g_autofree char *id_label = g_strdup_printf(_("Hardware ID: %s:%s"), d->vendor, d->product);
         GtkWidget *lbl_sub = gtk_label_new(id_label);
         gtk_widget_add_css_class(lbl_sub, "device-sub");
-
-        gtk_box_append(GTK_BOX(desc_box), badge);
         gtk_box_append(GTK_BOX(desc_box), lbl_sub);
         gtk_box_append(GTK_BOX(text_box), lbl_title);
         gtk_box_append(GTK_BOX(text_box), desc_box);
@@ -124,6 +151,50 @@ static gpointer scan_bt_devices_thread(gpointer user_data) {
     if (pclose(fp) == -1)
         g_warning("scan_bt_devices_thread: pclose failed");
     g_atomic_int_set(&scanning, FALSE);
+
+#ifdef MOCK_DEVICES
+    {
+        struct { const char *vendor; const char *product; const char *desc; const char *mfr; } mocks[] = {
+            {"0a12", "0001", "CSR Bluetooth Dongle (Mock)", "CSR"},
+            {"0bda", "1234", "Realtek Bluetooth Adapter (Mock)", "Realtek"},
+            {"8087", "0025", "Intel Wireless Bluetooth (Mock)", "Intel"},
+            {"0cf3", "1234", "Qualcomm Atheros Bluetooth (Mock)", "Qualcomm / Atheros"},
+            {"0a5c", "1234", "Broadcom BCM20702 Bluetooth (Mock)", "Broadcom / Cypress"},
+            {"0e8d", "1234", "MediaTek Bluetooth Adapter (Mock)", "MediaTek"},
+            {"148f", "1234", "Ralink Bluetooth Radio (Mock)", "Ralink"},
+            {"0a12", "0001", "Barrot Generic BT Dongle (Mock)", "Barrot / Generic"},
+            {"12ba", "0024", "Sony PlayStation DualSense (Mock)", "Sony"},
+            {"12ba", "0030", "Sony CECHYA-0080 Headset (Mock)", "Sony"},
+            {"12ba", "0100", "Guitar Hero Live Dongle receiver (Mock)", "Sony"},
+            {"12ba", "0210", "Rock Band Wireless Keyboard Controller Receiver (Mock)", "Sony"},
+        };
+        for (size_t i = 0; i < G_N_ELEMENTS(mocks); i++) {
+            ScanDevice *d = g_new0(ScanDevice, 1);
+            g_strlcpy(d->vendor, mocks[i].vendor, sizeof(d->vendor));
+            g_strlcpy(d->product, mocks[i].product, sizeof(d->product));
+            d->desc = g_strdup(mocks[i].desc);
+            g_strlcpy(d->manufacturer, mocks[i].mfr, sizeof(d->manufacturer));
+            g_ptr_array_add(devices, d);
+        }
+    }
+#endif
+
+    /* Device-specific overrides */
+    for (guint i = 0; i < devices->len; i++) {
+        ScanDevice *d = (ScanDevice *)g_ptr_array_index(devices, i);
+        if (g_strcmp0(d->vendor, "12ba") == 0) {
+            if (g_strcmp0(d->product, "0030") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("CECHYA-0080");
+            } else if (g_strcmp0(d->product, "0100") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("Guitar Hero Live Dongle receiver");
+            } else if (g_strcmp0(d->product, "0210") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("Rock Band Wireless Keyboard Controller Receiver");
+            }
+        }
+    }
 
     g_idle_add(on_scan_finished, devices);
     return NULL;

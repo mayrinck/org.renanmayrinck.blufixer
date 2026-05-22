@@ -9,20 +9,28 @@ char fw_path[64]     = "/lib/firmware";
 gboolean has_elevation = TRUE;
 gboolean in_flatpak = FALSE;
 char askpass_path[128] = "";
-char last_error_detail[4096] = "";
+const char *last_error_detail = NULL;
 
 gboolean tool_available(const char *name) {
     if (in_flatpak) {
-        g_autofree char *cmd = g_strdup_printf("flatpak-spawn --host which %s >/dev/null 2>&1", name);
-        return system(cmd) == 0;
+        g_autofree char *path = NULL;
+        g_autoptr(GError) error = NULL;
+        g_autofree char *cmd = g_strdup_printf("which %s 2>/dev/null", name);
+        int exit_status = 0;
+        g_spawn_command_line_sync(cmd, NULL, NULL, &exit_status, &error);
+        if (error) {
+            g_warning("tool_available(%s): %s", name, error->message);
+            return FALSE;
+        }
+        return exit_status == 0;
     }
     return g_find_program_in_path(name) != NULL;
 }
 
 static void cleanup_temp_files(void) {
     if (askpass_path[0]) {
-        int ret = unlink(askpass_path);
-        (void)ret;
+        if (unlink(askpass_path) != 0)
+            g_warning("cleanup_temp_files: unlink(%s) failed: %s", askpass_path, g_strerror(errno));
     }
 }
 

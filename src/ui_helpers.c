@@ -16,16 +16,19 @@ void init_custom_styles(void) {
         ".badge-mediatek { color: #e66000; background-color: rgba(230, 96,  0,   0.12); }"
         ".badge-ralink   { color: #2ECC71; background-color: rgba(46,  204, 113, 0.12); }"
         ".badge-csr      { color: #8E44AD; background-color: rgba(142, 68,  173, 0.12); }"
+        ".badge-sony { color: #00439c; background-color: rgba(0, 67,  156, 0.12); }"
         ".badge-generic  { color: #888;    background-color: rgba(136, 136, 136, 0.12); }"
         ".device-title  { font-size: 15px; font-weight: 500; }"
         ".device-sub    { font-size: 13px; color: alpha(@theme_fg_color, 0.55); }"
         "toast button:not(.image-button) {"
-        "  background: @error_bg_color;"
-        "  color: @error_fg_color;"
-        "  border-radius: 6px;"
+        "  background: transparent;"
         "  font-weight: bold;"
+        "  padding: 0;"
+        "  border: none;"
+        "  box-shadow: none;"
         "}"
-        "button.update-btn { color: #00CCFE; }";
+        "button.update-btn { color: #00CCFE; }"
+        "button, drop-down, menu-button { min-height: 34px; }";
 
     gtk_css_provider_load_from_string(provider, css);
     gtk_style_context_add_provider_for_display(
@@ -47,6 +50,7 @@ GtkWidget* create_brand_badge(const char *brand) {
         {"MediaTek",            "badge-mediatek"},
         {"Ralink",              "badge-ralink"},
         {"CSR",                 "badge-csr"},
+        {"Sony",                "badge-sony"},
     };
     gboolean found = FALSE;
     for (size_t i = 0; i < G_N_ELEMENTS(table); i++) {
