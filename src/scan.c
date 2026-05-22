@@ -31,7 +31,7 @@ const char* detect_manufacturer(const char *vendor, const char *product, const c
     if (g_strcmp0(vendor, "0bda") == 0) return "Realtek";
     if (g_strcmp0(vendor, "8086") == 0 || g_strcmp0(vendor, "8087") == 0) return "Intel";
     if (g_strcmp0(vendor, "0cf3") == 0) return "Qualcomm / Atheros";
-    if (g_strcmp0(vendor, "0a5c") == 0) return "Broadcom / Cypress";
+    if (g_strcmp0(vendor, "0a5c") == 0 || g_strcmp0(vendor, "1000") == 0) return "Broadcom / Cypress";
     if (g_strcmp0(vendor, "0e8d") == 0 || g_strcmp0(vendor, "14c3") == 0) return "MediaTek";
     if (g_strcmp0(vendor, "148f") == 0) return "Ralink";
     if (g_strcmp0(vendor, "12ba") == 0) return "Sony";

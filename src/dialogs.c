@@ -300,34 +300,46 @@ void on_info_cache_clicked(GtkButton *btn, gpointer user_data) {
             "\u6ce8\u610f\uff1a\u6240\u6709\u5df2\u914d\u5bf9\u7684\u8bbe\u5907\u5c06\u88ab\u5220\u9664\uff0c\u5e76\u9700\u8981\u91cd\u65b0\u914d\u5bf9\u3002"));
 }
 
+static GtkWidget* add_shortcut_row(AdwPreferencesGroup *group, const char *desc, const char *key) {
+    GtkWidget *row = adw_action_row_new();
+    adw_preferences_row_set_title(ADW_PREFERENCES_ROW(row), desc);
+    gtk_list_box_row_set_activatable(GTK_LIST_BOX_ROW(row), FALSE);
+
+    GtkWidget *key_label = gtk_label_new(key);
+    gtk_widget_add_css_class(key_label, "shortcut-key");
+    gtk_widget_set_valign(key_label, GTK_ALIGN_CENTER);
+    adw_action_row_add_suffix(ADW_ACTION_ROW(row), key_label);
+
+    adw_preferences_group_add(group, row);
+    return row;
+}
+
 void show_keyboard_shortcuts(void) {
-    show_info_dialog(info5(
-        "<b>Keyboard Shortcuts</b>\n\n"
-        "<tt>F1</tt>           Open keyboard shortcuts\n"
-        "<tt>F5</tt>           Scan for Bluetooth devices (Home screen)\n"
-        "<tt>F12</tt>          Toggle light/dark theme\n"
-        "<tt>Ctrl+Shift+C</tt> Copy tech sheet data (Details page)",
-        "<b>Atalhos do Teclado</b>\n\n"
-        "<tt>F1</tt>           Abrir os atalhos do teclado\n"
-        "<tt>F5</tt>           Escanear dispositivos Bluetooth (tela inicial)\n"
-        "<tt>F12</tt>          Alternar tema claro/escuro\n"
-        "<tt>Ctrl+Shift+C</tt> Copiar dados t\u00e9cnicos (p\u00e1gina de detalhes)",
-        "<b>Atajos del Teclado</b>\n\n"
-        "<tt>F1</tt>           Abrir atajos del teclado\n"
-        "<tt>F5</tt>           Escanear dispositivos Bluetooth (pantalla inicial)\n"
-        "<tt>F12</tt>          Alternar tema claro/oscuro\n"
-        "<tt>Ctrl+May\u00fas+C</tt> Copiar datos t\u00e9cnicos (p\u00e1gina de detalles)",
-        "<b>\u0413\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438</b>\n\n"
-        "<tt>F1</tt>           \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0433\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438\n"
-        "<tt>F5</tt>           \u0421\u043a\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430 Bluetooth (\u0413\u043b\u0430\u0432\u043d\u044b\u0439 \u044d\u043a\u0440\u0430\u043d)\n"
-        "<tt>F12</tt>          \u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0432\u0435\u0442\u043b\u0443\u044e/\u0442\u0435\u043c\u043d\u0443\u044e \u0442\u0435\u043c\u0443\n"
-        "<tt>Ctrl+Shift+C</tt> \u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0442\u0435\u0445\u043d\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 (\u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u0434\u0435\u0442\u0430\u043b\u0435\u0439)",
-        "<b>\u5feb\u6377\u952e</b>\n\n"
-        "<tt>F1</tt>           \u6253\u5f00\u5feb\u6377\u952e\n"
-        "<tt>F5</tt>           \u626b\u63cf\u84dd\u7259\u8bbe\u5907\uff08\u4e3b\u5c4f\u5e55\uff09\n"
-        "<tt>F12</tt>          \u5207\u6362\u6d45\u8272/\u6df1\u8272\u4e3b\u9898\n"
-        "<tt>Ctrl+Shift+C</tt> \u590d\u5236\u6280\u672f\u6570\u636e\uff08\u8be6\u60c5\u9875\uff09"
-    ));
+    AdwAlertDialog *dialog = ADW_ALERT_DIALOG(adw_alert_dialog_new(_("Keyboard Shortcuts"), NULL));
+
+    GtkWidget *page = adw_preferences_page_new();
+    GtkWidget *group = adw_preferences_group_new();
+    adw_preferences_page_add(ADW_PREFERENCES_PAGE(page), ADW_PREFERENCES_GROUP(group));
+
+    add_shortcut_row(ADW_PREFERENCES_GROUP(group), _("Open keyboard shortcuts"), "F1");
+    add_shortcut_row(ADW_PREFERENCES_GROUP(group), _("Scan for Bluetooth devices"), "F5");
+    add_shortcut_row(ADW_PREFERENCES_GROUP(group), _("Toggle light/dark theme"), "F12");
+    add_shortcut_row(ADW_PREFERENCES_GROUP(group), _("Open preferences"), "Ctrl+P");
+    add_shortcut_row(ADW_PREFERENCES_GROUP(group), _("Copy tech sheet data"), "Ctrl+Shift+C");
+
+    GtkWidget *scroll = gtk_scrolled_window_new();
+    gtk_widget_set_size_request(scroll, 480, 320);
+    gtk_scrolled_window_set_max_content_width(GTK_SCROLLED_WINDOW(scroll), 540);
+    gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(scroll), 400);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+    adw_alert_dialog_set_extra_child(dialog, scroll);
+    adw_alert_dialog_add_responses(dialog, "close", _("Got it"), NULL);
+    adw_alert_dialog_set_default_response(dialog, "close");
+    adw_alert_dialog_set_close_response(dialog, "close");
+
+    adw_dialog_present(ADW_DIALOG(dialog), app_data.window);
 }
 
 static void on_prefs_lang_selected(GObject *obj, GParamSpec *pspec, gpointer d) {

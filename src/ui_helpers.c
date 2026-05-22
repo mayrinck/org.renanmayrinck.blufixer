@@ -28,7 +28,16 @@ void init_custom_styles(void) {
         "  box-shadow: none;"
         "}"
         "button.update-btn { color: #00CCFE; }"
-        "button, drop-down, menu-button { min-height: 34px; }";
+        "button, drop-down, menu-button { min-height: 34px; }"
+        ".shortcut-key {"
+        "  font-family: monospace;"
+        "  font-size: 12px;"
+        "  font-weight: 600;"
+        "  padding: 2px 6px;"
+        "  border-radius: 4px;"
+        "  border: 1px solid alpha(currentColor, 0.25);"
+        "  background-color: alpha(currentColor, 0.08);"
+        "}";
 
     gtk_css_provider_load_from_string(provider, css);
     gtk_style_context_add_provider_for_display(
