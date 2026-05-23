@@ -7,11 +7,32 @@ guint scan_timeout_id = 0;
 
 typedef struct { const char *vendor; const char *product; const char *label; const char *icon; } CategoryEntry;
 
+static char* sanitize_desc(const char *s) {
+    if (!s) return NULL;
+    int count = 0;
+    for (const char *p = s; *p; p++)
+        if (*p == '&') count++;
+    if (count == 0) return g_strdup(s);
+    gsize len = strlen(s);
+    char *r = g_malloc(len + count * 2 + 1), *dst = r;
+    for (const char *src = s; *src; src++) {
+        if (*src == '&') { *dst++ = '-'; *dst++ = 'e'; *dst++ = '-'; }
+        else             { *dst++ = *src; }
+    }
+    *dst = '\0';
+    return r;
+}
+
 static const CategoryEntry* lookup_category(const char *vendor, const char *product) {
     static const CategoryEntry table[] = {
         {"12ba", "0030", "Headset", "audio-headset-symbolic"},
         {"12ba", "0100", "Gamepad", "input-gaming-symbolic"},
         {"12ba", "0210", "Gamepad", "input-gaming-symbolic"},
+        {"1ea7", "0064", "Mouse", "input-mouse-symbolic"},
+        {"054c", "0ce6", "Gamepad", "input-gaming-symbolic"},
+        {"054c", "0df2", "Gamepad", "input-gaming-symbolic"},
+        {"054c", "05c4", "Gamepad", "input-gaming-symbolic"},
+        {"054c", "09cc", "Gamepad", "input-gaming-symbolic"},
     };
     for (size_t i = 0; i < G_N_ELEMENTS(table); i++) {
         if (g_strcmp0(vendor, table[i].vendor) == 0 &&
@@ -34,7 +55,7 @@ const char* detect_manufacturer(const char *vendor, const char *product, const c
     if (g_strcmp0(vendor, "0a5c") == 0 || g_strcmp0(vendor, "1000") == 0) return "Broadcom / Cypress";
     if (g_strcmp0(vendor, "0e8d") == 0 || g_strcmp0(vendor, "14c3") == 0) return "MediaTek";
     if (g_strcmp0(vendor, "148f") == 0) return "Ralink";
-    if (g_strcmp0(vendor, "12ba") == 0) return "Sony";
+    if (g_strcmp0(vendor, "12ba") == 0 || g_strcmp0(vendor, "054c") == 0) return "Sony";
     return "Generic";
 }
 
@@ -167,6 +188,12 @@ static gpointer scan_bt_devices_thread(gpointer user_data) {
             {"12ba", "0030", "Sony CECHYA-0080 Headset (Mock)", "Sony"},
             {"12ba", "0100", "Guitar Hero Live Dongle receiver (Mock)", "Sony"},
             {"12ba", "0210", "Rock Band Wireless Keyboard Controller Receiver (Mock)", "Sony"},
+            {"054c", "0ce6", "DualSense PS5 Wireless Controller (Mock)", "Sony"},
+            {"054c", "0df2", "DualSense Edge PS5 Wireless Controller (Mock)", "Sony"},
+            {"054c", "05c4", "DualShock 4 Wireless Controller Gen. 1 (Mock)", "Sony"},
+            {"054c", "09cc", "DualShock 4 Wireless Controller Gen. 2 (Mock)", "Sony"},
+            {"054c", "0ba0", "PlayStation 4 USB Wireless Adaptor (Mock)", "Sony"},
+            {"1ea7", "0064", "Generic Bluetooth Mouse (Mock)", "Generic"},
         };
         for (size_t i = 0; i < G_N_ELEMENTS(mocks); i++) {
             ScanDevice *d = g_new0(ScanDevice, 1);
@@ -194,6 +221,31 @@ static gpointer scan_bt_devices_thread(gpointer user_data) {
                 d->desc = g_strdup("Rock Band Wireless Keyboard Controller Receiver");
             }
         }
+        if (g_strcmp0(d->vendor, "054c") == 0) {
+            if (g_strcmp0(d->product, "0ce6") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("DualSense PS5 Wireless Controller");
+            } else if (g_strcmp0(d->product, "0df2") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("DualSense Edge PS5 Wireless Controller");
+            } else if (g_strcmp0(d->product, "05c4") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("DualShock 4 Wireless Controller Gen. 1");
+            } else if (g_strcmp0(d->product, "09cc") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("DualShock 4 Wireless Controller Gen. 2");
+            } else if (g_strcmp0(d->product, "0ba0") == 0) {
+                g_free(d->desc);
+                d->desc = g_strdup("PlayStation 4 USB Wireless Adaptor");
+            }
+        }
+    }
+
+    for (guint i = 0; i < devices->len; i++) {
+        ScanDevice *d = (ScanDevice *)g_ptr_array_index(devices, i);
+        char *clean = sanitize_desc(d->desc);
+        g_free(d->desc);
+        d->desc = clean;
     }
 
     g_idle_add(on_scan_finished, devices);

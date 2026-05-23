@@ -300,6 +300,76 @@ void on_info_cache_clicked(GtkButton *btn, gpointer user_data) {
             "\u6ce8\u610f\uff1a\u6240\u6709\u5df2\u914d\u5bf9\u7684\u8bbe\u5907\u5c06\u88ab\u5220\u9664\uff0c\u5e76\u9700\u8981\u91cd\u65b0\u914d\u5bf9\u3002"));
 }
 
+void on_info_ghlive_clicked(GtkButton *btn, gpointer user_data) {
+    const char *c = dialog_color();
+    show_info_markup(
+        "<b>%s</b>\n\n"
+        "%s\n\n"
+        "%s\n\n"
+        "%s\n"
+        "<span font_family='monospace' foreground='%s'>%s</span>\n"
+        "<span font_family='monospace' foreground='%s'>%s</span>\n\n"
+        "%s",
+        info5("Fix Read Permission Failure (Guitar Hero Live)",
+              "Corrigir Falha de Permiss\u00e3o de Leitura (Guitar Hero Live)",
+              "Corregir Fallo de Permiso de Lectura (Guitar Hero Live)",
+              "\u0418\u0441\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u043e\u0448\u0438\u0431\u043a\u0443 \u043f\u0440\u0430\u0432 \u0434\u043e\u0441\u0442\u0443\u043f\u0430 \u043d\u0430 \u0447\u0442\u0435\u043d\u0438\u0435 (Guitar Hero Live)",
+              "\u4fee\u590d\u8bfb\u53d6\u6743\u9650\u5931\u8d25 (Guitar Hero Live)"),
+        info5("The Guitar Hero Live dongle (12ba:0100) is recognized by the system and the LED indicates the guitar is synced, but games and mapping software cannot read any button inputs due to permission restrictions on the HID raw device.",
+              "O dongle do Guitar Hero Live (12ba:0100) \u00e9 reconhecido pelo sistema e o LED indica que a guitarra est\u00e1 sincronizada, mas jogos e softwares de mapeamento n\u00e3o conseguem ler nenhuma a\u00e7\u00e3o dos bot\u00f5es devido a restri\u00e7\u00f5es de permiss\u00e3o no dispositivo HID raw.",
+              "El dongle de Guitar Hero Live (12ba:0100) es reconocido por el sistema y el LED indica que la guitarra est\u00e1 sincronizada, pero los juegos y software de mapeo no pueden leer ninguna acci\u00f3n de los botones debido a restricciones de permiso en el dispositivo HID raw.",
+              "\u0414\u043e\u043d\u0433\u043b Guitar Hero Live (12ba:0100) \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u044f\u0435\u0442\u0441\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u043e\u0439, \u0438 \u0441\u0432\u0435\u0442\u043e\u0434\u0438\u043e\u0434 \u0443\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u043d\u0430 \u0441\u0438\u043d\u0445\u0440\u043e\u043d\u0438\u0437\u0430\u0446\u0438\u044e \u0433\u0438\u0442\u0430\u0440\u044b, \u043d\u043e \u0438\u0433\u0440\u044b \u0438 \u043f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u044b \u0441\u043e\u043f\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u043d\u0435 \u043c\u043e\u0433\u0443\u0442 \u0441\u0447\u0438\u0442\u044b\u0432\u0430\u0442\u044c \u043d\u0430\u0436\u0430\u0442\u0438\u044f \u043a\u043d\u043e\u043f\u043e\u043a \u0438\u0437-\u0437\u0430 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u0439 \u043f\u0440\u0430\u0432 \u0434\u043e\u0441\u0442\u0443\u043f\u0430 \u043a HID raw-\u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0443.",
+              "Guitar Hero Live\u9002\u914d\u5668(12ba:0100)\u88ab\u7cfb\u7edf\u8bc6\u522b\uff0cLED\u6307\u793a\u5409\u4ed6\u5df2\u540c\u6b65\uff0c\u4f46\u7531\u4e8eHID\u539f\u59cb\u8bbe\u5907\u7684\u6743\u9650\u9650\u5236\uff0c\u6e38\u620f\u548c\u6620\u5c04\u8f6f\u4ef6\u65e0\u6cd5\u8bfb\u53d6\u4efb\u4f55\u6309\u94ae\u64cd\u4f5c\u3002"),
+        info5("This fix creates a udev rule that grants read/write access to all users for this specific device, and reloads the udev rules so that the permission change takes effect immediately.",
+              "Esta corre\u00e7\u00e3o cria uma regra udev que concede acesso de leitura/escrita a todos os usu\u00e1rios para este dispositivo espec\u00edfico, e recarrega as regras udev para que a mudan\u00e7a de permiss\u00e3o tenha efeito imediato.",
+              "Esta correcci\u00f3n crea una regla udev que otorga acceso de lectura/escritura a todos los usuarios para este dispositivo espec\u00edfico, y recarga las reglas udev para que el cambio de permiso surta efecto inmediatamente.",
+              "\u042d\u0442\u043e \u0438\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0441\u043e\u0437\u0434\u0430\u0451\u0442 \u043f\u0440\u0430\u0432\u0438\u043b\u043e udev, \u043f\u0440\u0435\u0434\u043e\u0441\u0442\u0430\u0432\u043b\u044f\u044e\u0449\u0435\u0435 \u0434\u043e\u0441\u0442\u0443\u043f \u043d\u0430 \u0447\u0442\u0435\u043d\u0438\u0435/\u0437\u0430\u043f\u0438\u0441\u044c \u0432\u0441\u0435\u043c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f\u043c \u0434\u043b\u044f \u044d\u0442\u043e\u0433\u043e \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u043d\u043e\u0433\u043e \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430, \u0438 \u043f\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442 \u043f\u0440\u0430\u0432\u0438\u043b\u0430 udev, \u0447\u0442\u043e\u0431\u044b \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u043f\u0440\u0430\u0432 \u0432\u0441\u0442\u0443\u043f\u0438\u043b\u043e \u0432 \u0441\u0438\u043b\u0443 \u043d\u0435\u043c\u0435\u0434\u043b\u0435\u043d\u043d\u043e.",
+              "\u6b64\u4fee\u590d\u7a0b\u5e8f\u521b\u5efa\u4e00\u6761udev\u89c4\u5219\uff0c\u6388\u4e88\u6240\u6709\u7528\u6237\u5bf9\u6b64\u7279\u5b9a\u8bbe\u5907\u7684\u8bfb/\u5199\u8bbf\u95ee\u6743\u9650\uff0c\u5e76\u91cd\u65b0\u52a0\u8f7dudev\u89c4\u5219\u4ee5\u4f7f\u6743\u9650\u66f4\u6539\u7acb\u5373\u751f\u6548\u3002"),
+        info5("Commands executed:", "Comandos Executados:", "Comandos ejecutados:", "\u0412\u044b\u043f\u043e\u043b\u043d\u044f\u0435\u043c\u044b\u0435 \u043a\u043e\u043c\u0430\u043d\u0434\u044b:", "\u6267\u884c\u7684\u547d\u4ee4:"),
+        c, "\u2022 echo 'SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"12ba\", ATTRS{idProduct}==\"0100\", MODE=\"0666\"' > /etc/udev/rules.d/99-ghlive.rules",
+        c, "\u2022 udevadm control --reload-rules &amp;&amp; udevadm trigger",
+        info5("Note: After applying, unplug and replug the dongle (or reconnect the device) for the rule to take effect.",
+              "Nota: Ap\u00f3s aplicar, desconecte e reconecte o dongle (ou reconecte o dispositivo) para que a regra tenha efeito.",
+              "Nota: Despu\u00e9s de aplicar, desconecte y vuelva a conectar el dongle (o reconecte el dispositivo) para que la regla surta efecto.",
+              "\u041f\u0440\u0438\u043c\u0435\u0447\u0430\u043d\u0438\u0435: \u041f\u043e\u0441\u043b\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u043e\u0442\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u0438 \u0441\u043d\u043e\u0432\u0430 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u0434\u043e\u043d\u0433\u043b (\u0438\u043b\u0438 \u043f\u0435\u0440\u0435\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e), \u0447\u0442\u043e\u0431\u044b \u043f\u0440\u0430\u0432\u0438\u043b\u043e \u0432\u0441\u0442\u0443\u043f\u0438\u043b\u043e \u0432 \u0441\u0438\u043b\u0443.",
+              "\u6ce8\u610f\uff1a\u5e94\u7528\u540e\uff0c\u8bf7\u62d4\u4e0b\u5e76\u91cd\u65b0\u63d2\u5165\u9002\u914d\u5668\uff08\u6216\u91cd\u65b0\u8fde\u63a5\u8bbe\u5907\uff09\u4ee5\u4f7f\u89c4\u5219\u751f\u6548\u3002"));
+}
+
+void on_info_barrot_clicked(GtkButton *btn, gpointer user_data) {
+    const char *c = dialog_color();
+    show_info_markup(
+        "<b>%s</b>\n\n"
+        "%s\n\n"
+        "%s\n\n"
+        "%s\n"
+        "<span font_family='monospace' foreground='%s'>%s</span>\n"
+        "<span font_family='monospace' foreground='%s'>%s</span>\n\n"
+        "%s",
+        info5("Enable Bluetooth Dual Mode (Barrot/Generic)",
+              "Ativar Modo Duplo Bluetooth (Barrot/Generic)",
+              "Activar Modo Dual Bluetooth (Barrot/Generic)",
+              "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0434\u0432\u043e\u0439\u043d\u043e\u0439 \u0440\u0435\u0436\u0438\u043c Bluetooth (Barrot/Generic)",
+              "\u542f\u7528\u84dd\u7259\u53cc\u6a21 (Barrot/Generic)"),
+        info5("Many older Barrot or clone dongles report to Linux that they support only classic Bluetooth (BR/EDR), disabling BLE device scanning to save chip processing bandwidth. This prevents low-energy devices such as mice, keyboards, and IoT sensors from being detected.",
+              "Muitos dongles Barrot antigos ou clonados relatam ao Linux que suportam apenas o modo Bluetooth cl\u00e1ssico (BR/EDR), desativando o escaneamento de dispositivos BLE para economizar largura de banda de processamento do chip. Isso impede que dispositivos de baixa energia, como mouses, teclados e sensores IoT, sejam detectados.",
+              "Muchos dongles Barrot antiguos o clonados informan a Linux que solo son compatibles con el modo Bluetooth cl\u00e1sico (BR/EDR), desactivando el escaneo de dispositivos BLE para ahorrar ancho de banda de procesamiento del chip. Esto impide que dispositivos de bajo consumo, como ratones, teclados y sensores IoT, sean detectados.",
+              "\u041c\u043d\u043e\u0433\u0438\u0435 \u0441\u0442\u0430\u0440\u044b\u0435 \u0434\u043e\u043d\u0433\u043b\u044b Barrot \u0438\u043b\u0438 \u043a\u043b\u043e\u043d\u044b \u0441\u043e\u043e\u0431\u0449\u0430\u044e\u0442 Linux, \u0447\u0442\u043e \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044e\u0442 \u0442\u043e\u043b\u044c\u043a\u043e \u043a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0439 Bluetooth (BR/EDR), \u043e\u0442\u043a\u043b\u044e\u0447\u0430\u044f \u0441\u043a\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432 BLE \u0434\u043b\u044f \u044d\u043a\u043e\u043d\u043e\u043c\u0438\u0438 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u043e\u0440\u043d\u043e\u0433\u043e \u0440\u0435\u0441\u0443\u0440\u0441\u0430 \u0447\u0438\u043f\u0430. \u042d\u0442\u043e \u043f\u0440\u0435\u043f\u044f\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d\u0438\u044e \u043d\u0438\u0437\u043a\u043e\u044d\u043d\u0435\u0440\u0433\u0435\u0442\u0438\u0447\u0435\u0441\u043a\u0438\u0445 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432, \u0442\u0430\u043a\u0438\u0445 \u043a\u0430\u043a \u043c\u044b\u0448\u0438, \u043a\u043b\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u044b \u0438 \u0434\u0430\u0442\u0447\u0438\u043a\u0438 IoT.",
+              "\u8bb8\u591a\u65e7\u7248Barrot\u6216\u514b\u9686\u9002\u914d\u5668\u5411Linux\u62a5\u544a\u5b83\u4eec\u4ec5\u652f\u6301\u7ecf\u5178\u84dd\u7259(BR/EDR)\uff0c\u4e3a\u4e86\u8282\u7701\u82af\u7247\u5904\u7406\u5e26\u5bbd\u800c\u7981\u7528BLE\u8bbe\u5907\u626b\u63cf\u3002\u8fd9\u4f1a\u963b\u6b62\u4f4e\u529f\u8017\u8bbe\u5907\uff08\u5982\u9f20\u6807\u3001\u952e\u76d8\u548cIoT\u4f20\u611f\u5668\uff09\u88ab\u68c0\u6d4b\u5230\u3002"),
+        info5("This fix forces ControllerMode=dual in the Bluetooth configuration, enabling both classic (BR/EDR) and low-energy (BLE) modes simultaneously. It requires the Energy fix to be active first.",
+              "Esta corre\u00e7\u00e3o for\u00e7a ControllerMode=dual na configura\u00e7\u00e3o Bluetooth, ativando os modos cl\u00e1ssico (BR/EDR) e de baixa energia (BLE) simultaneamente. Requer que a corre\u00e7\u00e3o de energia esteja ativa primeiro.",
+              "Esta correcci\u00f3n fuerza ControllerMode=dual en la configuraci\u00f3n Bluetooth, activando los modos cl\u00e1sico (BR/EDR) y de baja energ\u00eda (BLE) simult\u00e1neamente. Requiere que la correcci\u00f3n de energ\u00eda est\u00e9 activa primero.",
+              "\u042d\u0442\u043e \u0438\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0440\u0438\u043d\u0443\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0443\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u0442 ControllerMode=dual \u0432 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 Bluetooth, \u0432\u043a\u043b\u044e\u0447\u0430\u044f \u043e\u0434\u043d\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0439 (BR/EDR) \u0438 \u043d\u0438\u0437\u043a\u043e\u044d\u043d\u0435\u0440\u0433\u0435\u0442\u0438\u0447\u0435\u0441\u043a\u0438\u0439 (BLE) \u0440\u0435\u0436\u0438\u043c\u044b. \u0422\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u0435\u0434\u0432\u0430\u0440\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0439 \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u0438\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u044d\u043d\u0435\u0440\u0433\u043e\u043f\u043e\u0442\u0440\u0435\u0431\u043b\u0435\u043d\u0438\u044f.",
+              "\u6b64\u4fee\u590d\u5f3a\u5236\u5c06\u84dd\u7259\u914d\u7f6e\u4e2d\u7684ControllerMode\u8bbe\u7f6e\u4e3adual\uff0c\u540c\u65f6\u542f\u7528\u7ecf\u5178(BR/EDR)\u548c\u4f4e\u529f\u8017(BLE)\u6a21\u5f0f\u3002\u9700\u8981\u5148\u6fc0\u6d3b\u80fd\u6e90\u4fee\u590d\u3002"),
+        info5("Commands executed:", "Comandos Executados:", "Comandos ejecutados:", "\u0412\u044b\u043f\u043e\u043b\u043d\u044f\u0435\u043c\u044b\u0435 \u043a\u043e\u043c\u0430\u043d\u0434\u044b:", "\u6267\u884c\u7684\u547d\u4ee4:"),
+        c, "\u2022 sed -i 's/^ControllerMode.*/ControllerMode = dual/' /etc/bluetooth/main.conf",
+        c, "\u2022 systemctl restart bluetooth",
+        info5("Note: After applying, the Bluetooth service is restarted automatically. Dual mode allows both classic and BLE devices to be discovered.",
+              "Nota: Ap\u00f3s aplicar, o servi\u00e7o Bluetooth \u00e9 reiniciado automaticamente. O modo duplo permite que dispositivos cl\u00e1ssicos e BLE sejam descobertos.",
+              "Nota: Despu\u00e9s de aplicar, el servicio Bluetooth se reinicia autom\u00e1ticamente. El modo dual permite que se descubran dispositivos tanto cl\u00e1sicos como BLE.",
+              "\u041f\u0440\u0438\u043c\u0435\u0447\u0430\u043d\u0438\u0435: \u041f\u043e\u0441\u043b\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0441\u043b\u0443\u0436\u0431\u0430 Bluetooth \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u043f\u0435\u0440\u0435\u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442\u0441\u044f. \u0414\u0432\u043e\u0439\u043d\u043e\u0439 \u0440\u0435\u0436\u0438\u043c \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043e\u0431\u043d\u0430\u0440\u0443\u0436\u0438\u0432\u0430\u0442\u044c \u043a\u0430\u043a \u043a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0435, \u0442\u0430\u043a \u0438 BLE-\u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430.",
+              "\u6ce8\u610f\uff1a\u5e94\u7528\u540e\uff0c\u84dd\u7259\u670d\u52a1\u5c06\u81ea\u52a8\u91cd\u542f\u3002\u53cc\u6a21\u6a21\u5f0f\u5141\u8bb8\u540c\u65f6\u53d1\u73b0\u7ecf\u5178\u548cBLE\u8bbe\u5907\u3002"));
+}
+
 static GtkWidget* add_shortcut_row(AdwPreferencesGroup *group, const char *desc, const char *key) {
     GtkWidget *row = adw_action_row_new();
     adw_preferences_row_set_title(ADW_PREFERENCES_ROW(row), desc);

@@ -1,3 +1,18 @@
+blufixer (1.6.7-1) unstable; urgency=medium
+
+  * New Sony 054c device database: DualSense PS5/Edge, DualShock 4 G1/G2, PS4 Adaptor.
+  * Category icons: mouse icon for 1ea7:0064 devices.
+  * Device name sanitisation: & replaced with -e- for clean display.
+  * Sony badge restyled: black background, white text for brand identity.
+  * Crash fix: NULL guard before strlen(last_error_detail) in error dialog.
+  * Memory leak fix: g_free(last_error_detail) before overwriting.
+  * Code quality: CommandContext.command[4096], dead code removed in run_fix_realtek.
+  * atexit(cleanup_temp_files) registered once via static flag.
+  * manufacturer NULL guard added in on_device_selected.
+  * Comprehensive TESTING.md (165 lines, 14 sections).
+
+ -- Renan Mayrinck <renan@mayrinck.com>  Fri, 22 May 2026 10:00:00 -0300
+
 blufixer (1.6.0-1) unstable; urgency=medium
 
   * Theme selector (System / Light / Dark) with persistence in ~/.config/blufixer/theme.

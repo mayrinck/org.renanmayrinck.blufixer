@@ -16,7 +16,7 @@ void init_custom_styles(void) {
         ".badge-mediatek { color: #e66000; background-color: rgba(230, 96,  0,   0.12); }"
         ".badge-ralink   { color: #2ECC71; background-color: rgba(46,  204, 113, 0.12); }"
         ".badge-csr      { color: #8E44AD; background-color: rgba(142, 68,  173, 0.12); }"
-        ".badge-sony { color: #00439c; background-color: rgba(0, 67,  156, 0.12); }"
+        ".badge-sony { color: #fff; background-color: #000; }"
         ".badge-generic  { color: #888;    background-color: rgba(136, 136, 136, 0.12); }"
         ".device-title  { font-size: 15px; font-weight: 500; }"
         ".device-sub    { font-size: 13px; color: alpha(@theme_fg_color, 0.55); }"

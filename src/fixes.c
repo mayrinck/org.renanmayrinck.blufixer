@@ -21,6 +21,15 @@ static gboolean broadcom_fw_is_active(void) {
     g_autofree char *fw_dir = g_strdup_printf("%s/b43", fw_path);
     return g_file_test(fw_dir, G_FILE_TEST_IS_DIR);
 }
+static gboolean ghlive_is_active(void) {
+    return g_file_test("/etc/udev/rules.d/99-ghlive.rules", G_FILE_TEST_EXISTS);
+}
+static gboolean barrot_is_active(void) {
+    g_autofree char *contents = NULL;
+    if (g_file_get_contents("/etc/bluetooth/main.conf", &contents, NULL, NULL))
+        return g_strrstr(contents, "ControllerMode = dual") != NULL;
+    return FALSE;
+}
 
 void update_actions_page_state(void) {
     const char *mfr = detect_manufacturer(app_data.selected_vendor, app_data.selected_product, app_data.selected_desc);
@@ -32,6 +41,13 @@ void update_actions_page_state(void) {
     gboolean is_broadcom = g_strcmp0(mfr, "Broadcom / Cypress") == 0;
     gtk_widget_set_visible(app_data.row_broadcom, is_broadcom);
 
+    gboolean is_ghlive = g_strcmp0(app_data.selected_vendor, "12ba") == 0
+                      && g_strcmp0(app_data.selected_product, "0100") == 0;
+    gtk_widget_set_visible(app_data.row_ghlive, is_ghlive);
+
+    gboolean has_exclusive = is_realtek || is_broadcom || is_ghlive;
+    gtk_widget_set_visible(app_data.fixes_exclusive_group, has_exclusive);
+
     if (csr_is_active()) {
         gtk_label_set_text(GTK_LABEL(app_data.lbl_csr), _("Revert"));
         gtk_widget_remove_css_class(app_data.btn_csr, "suggested-action");
@@ -41,6 +57,8 @@ void update_actions_page_state(void) {
         gtk_widget_remove_css_class(app_data.btn_csr, "destructive-action");
         gtk_widget_add_css_class(app_data.btn_csr, "suggested-action");
     }
+
+    gtk_widget_set_visible(app_data.row_barrot, csr_is_active());
 
     if (ertm_is_active()) {
         gtk_label_set_text(GTK_LABEL(app_data.lbl_ertm), _("Revert"));
@@ -76,6 +94,26 @@ void update_actions_page_state(void) {
         gtk_widget_set_sensitive(app_data.btn_broadcom, has_elevation);
     }
 
+    if (ghlive_is_active()) {
+        gtk_label_set_text(GTK_LABEL(app_data.lbl_ghlive), _("Revert"));
+        gtk_widget_remove_css_class(app_data.btn_ghlive, "suggested-action");
+        gtk_widget_add_css_class(app_data.btn_ghlive, "destructive-action");
+    } else {
+        gtk_label_set_text(GTK_LABEL(app_data.lbl_ghlive), _("Apply"));
+        gtk_widget_remove_css_class(app_data.btn_ghlive, "destructive-action");
+        gtk_widget_add_css_class(app_data.btn_ghlive, "suggested-action");
+    }
+
+    if (barrot_is_active()) {
+        gtk_label_set_text(GTK_LABEL(app_data.lbl_barrot), _("Revert"));
+        gtk_widget_remove_css_class(app_data.btn_barrot, "suggested-action");
+        gtk_widget_add_css_class(app_data.btn_barrot, "destructive-action");
+    } else {
+        gtk_label_set_text(GTK_LABEL(app_data.lbl_barrot), _("Apply"));
+        gtk_widget_remove_css_class(app_data.btn_barrot, "destructive-action");
+        gtk_widget_add_css_class(app_data.btn_barrot, "suggested-action");
+    }
+
     g_autofree char *bt_contents = NULL;
     gboolean is_legacy = FALSE;
     if (g_file_get_contents("/etc/bluetooth/main.conf", &bt_contents, NULL, NULL))
@@ -94,6 +132,8 @@ void update_actions_page_state(void) {
     gtk_widget_set_sensitive(app_data.btn_csr, has_elevation);
     gtk_widget_set_sensitive(app_data.btn_ertm, has_elevation);
     gtk_widget_set_sensitive(app_data.btn_realtek, has_elevation);
+    gtk_widget_set_sensitive(app_data.btn_ghlive, has_elevation);
+    gtk_widget_set_sensitive(app_data.btn_barrot, has_elevation);
     gtk_widget_set_sensitive(app_data.btn_legacy, has_elevation);
     gtk_widget_set_sensitive(app_data.btn_rfkill, has_elevation);
     gtk_widget_set_sensitive(app_data.btn_perm, has_elevation);
@@ -103,7 +143,12 @@ void update_actions_page_state(void) {
 
 static gboolean on_command_finished(gpointer user_data) {
     CommandContext *ctx = (CommandContext *)user_data;
-    if (!gtk_widget_get_realized(app_data.window)) {
+    if (!app_data.window || !gtk_widget_get_realized(app_data.window)) {
+        g_free(ctx->error_detail);
+        g_free(ctx);
+        return G_SOURCE_REMOVE;
+    }
+    if (!ctx->button || !ctx->spinner) {
         g_free(ctx->error_detail);
         g_free(ctx);
         return G_SOURCE_REMOVE;
@@ -124,6 +169,9 @@ static gboolean on_command_finished(gpointer user_data) {
         adw_toast_overlay_add_toast(ADW_TOAST_OVERLAY(app_data.toast_overlay),
             adw_toast_new(ctx->success_msg));
     } else {
+        if (!ctx->error_detail)
+            ctx->error_detail = g_strdup(_("The command completed but the expected fix state was not achieved."));
+        g_free(last_error_detail);
         last_error_detail = ctx->error_detail;
         ctx->error_detail = NULL;
 
@@ -199,6 +247,7 @@ void launch_async_action(GtkWidget *button, const char *cmd,
 {
     if (!gtk_widget_is_sensitive(button)) return;
     GtkWidget *spinner = GTK_WIDGET(g_object_get_data(G_OBJECT(button), "spinner"));
+    if (!spinner) { g_warning("launch_async_action: no spinner on button"); return; }
     gtk_widget_set_visible(spinner, TRUE);
     gtk_spinner_start(GTK_SPINNER(spinner));
     gtk_widget_set_sensitive(button, FALSE);
@@ -239,7 +288,6 @@ void run_fix_ertm(void) {
 void run_fix_realtek(void) {
     if (!app_data.btn_realtek) return;
     char cmd[4096];
-    g_autofree char *fw_check = g_strdup_printf("%s/rtl_bt/rtl8761b_fw.bin", fw_path);
 
     if (realtek_is_active()) {
         g_snprintf(cmd, sizeof(cmd),
@@ -349,4 +397,36 @@ void run_fix_cache(void) {
     char cmd[4096];
     g_snprintf(cmd, sizeof(cmd), "%s bash -c '%s && rm -rf /var/lib/bluetooth/*/* && %s'", priv_cmd, stop_cmd, start_cmd);
     launch_async_action(app_data.btn_cache, cmd, _("Device cache cleared!"), _("Error clearing cache."), NULL, FALSE);
+}
+
+void run_fix_ghlive(void) {
+    if (!app_data.btn_ghlive) return;
+    char cmd[4096];
+    if (ghlive_is_active()) {
+        g_snprintf(cmd, sizeof(cmd),
+            "%s bash -c 'rm -f /etc/udev/rules.d/99-ghlive.rules && udevadm control --reload-rules && udevadm trigger'",
+            priv_cmd);
+        launch_async_action(app_data.btn_ghlive, cmd, _("GH Live udev rule removed!"), _("Error removing udev rule."), ghlive_is_active, FALSE);
+    } else {
+        g_snprintf(cmd, sizeof(cmd),
+            "%s bash -c 'echo \"SUBSYSTEM==\\\"hidraw\\\", ATTRS{idVendor}==\\\"12ba\\\", ATTRS{idProduct}==\\\"0100\\\", MODE=\\\"0666\\\"\" > /etc/udev/rules.d/99-ghlive.rules && udevadm control --reload-rules && udevadm trigger'",
+            priv_cmd);
+        launch_async_action(app_data.btn_ghlive, cmd, _("GH Live udev rule applied!"), _("Error applying udev rule."), ghlive_is_active, TRUE);
+    }
+}
+
+void run_fix_barrot(void) {
+    if (!app_data.btn_barrot) return;
+    char cmd[4096];
+    if (barrot_is_active()) {
+        g_snprintf(cmd, sizeof(cmd),
+            "%s bash -c 'sed -i \"/^ControllerMode[[:space:]]*=[[:space:]]*dual/d\" /etc/bluetooth/main.conf && %s'",
+            priv_cmd, restart_cmd);
+        launch_async_action(app_data.btn_barrot, cmd, _("Dual mode reverted!"), _("Error reverting dual mode."), barrot_is_active, FALSE);
+    } else {
+        g_snprintf(cmd, sizeof(cmd),
+            "%s bash -c '(grep -q \"^ControllerMode\" /etc/bluetooth/main.conf && sed -i \"s/^ControllerMode.*/ControllerMode = dual/\" /etc/bluetooth/main.conf || echo \"ControllerMode = dual\" >> /etc/bluetooth/main.conf) && %s'",
+            priv_cmd, restart_cmd);
+        launch_async_action(app_data.btn_barrot, cmd, _("Dual mode enabled!"), _("Error enabling dual mode."), barrot_is_active, TRUE);
+    }
 }

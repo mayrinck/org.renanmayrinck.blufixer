@@ -1,6 +1,6 @@
 APP_ID     := org.renanmayrinck.blufixer
 MOCK ?= 0
-VERSION := 1.6.0
+VERSION := 1.6.7
 TARGET     := blufixer
 SRCDIR     := src
 SOURCES    := $(wildcard $(SRCDIR)/*.c)

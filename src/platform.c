@@ -9,7 +9,7 @@ char fw_path[64]     = "/lib/firmware";
 gboolean has_elevation = TRUE;
 gboolean in_flatpak = FALSE;
 char askpass_path[128] = "";
-const char *last_error_detail = NULL;
+char *last_error_detail = NULL;
 
 gboolean tool_available(const char *name) {
     if (in_flatpak) {
@@ -94,7 +94,8 @@ void detect_system_tools(void) {
                             has_elevation = TRUE;
                         }
                         close(fd);
-                        atexit(cleanup_temp_files);
+                        static gboolean ate = FALSE;
+                        if (!ate) { atexit(cleanup_temp_files); ate = TRUE; }
                     }
                 } else {
                     g_snprintf(priv_cmd, sizeof(priv_cmd), "SUDO_ASKPASS=%s sudo -A", ap);

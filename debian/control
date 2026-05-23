@@ -1,19 +1,9 @@
-Source: blufixer
-Section: utils
-Priority: optional
-Maintainer: Renan Mayrinck <renan@mayrinck.com>
-Build-Depends: debhelper-compat (= 13),
-               pkg-config,
-               libgtk-4-dev,
-               libadwaita-1-dev,
-               desktop-file-utils,
-               libglib2.0-bin
-Standards-Version: 4.7.0
-Homepage: https://github.com/mayrinck/blufixer
-
 Package: blufixer
 Version: @VERSION@-1
 Architecture: @ARCH@
+Section: utils
+Priority: optional
+Maintainer: Renan Mayrinck <renan@mayrinck.com>
 Depends: libadwaita-1-0 (>= 1.0),
          libgtk-4-1 (>= 4.0),
          libglib2.0-0 (>= 2.80),

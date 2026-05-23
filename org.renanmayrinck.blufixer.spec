@@ -1,7 +1,7 @@
 %global app_id org.renanmayrinck.blufixer
 
 Name:       blufixer
-Version:    1.6.0
+Version:    1.6.7
 Release:    1%{?dist}
 Summary:    Bluetooth troubleshooting utility for Linux
 
@@ -63,6 +63,17 @@ export CFLAGS="%{optflags} -fno-lto"
 %ghost %{_datadir}/icons/hicolor/icon-theme.cache
 
 %changelog
+* Fri May 22 2026 Renan Mayrinck <renan@renanmayrinck.com> - 1.6.7-1
+- New Sony 054c device database (DualSense, DualShock 4, PS4 Adaptor)
+- Category icons: mouse support for 1ea7:0064
+- Device name sanitisation (& → -e-)
+- Sony badge: black background, white text
+- Crash fix: NULL guard on error detail display
+- Memory leak fix: free last_error_detail before overwrite
+- Code quality: command buffer increased to 4096, dead code removed
+- atexit registered once (static flag), manufacturer NULL guard
+- Comprehensive TESTING.md (165 lines, 14 sections)
+
 * Thu May 21 2026 Renan Mayrinck <renan@renanmayrinck.com> - 1.6.0-1
 - Theme selector (System/Light/Dark) with persistence
 - Update button in header bar for new GitHub releases

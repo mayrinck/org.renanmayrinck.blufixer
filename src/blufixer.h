@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #ifndef VERSION
-#define VERSION "1.6.0"
+#define VERSION "1.6.7"
 #endif
 #define APP_VERSION VERSION
 
@@ -37,7 +37,7 @@ typedef enum {
 typedef struct { const char *en, *pt, *es, *ru, *zh; } TransEntry;
 
 typedef struct {
-    char command[1024];
+    char command[4096];
     GtkWidget *button;
     GtkWidget *spinner;
     char success_msg[64];
@@ -70,6 +70,7 @@ typedef struct {
     GtkWidget *devices_group;
     GtkWidget *status_group;
     GtkWidget *fixes_group;
+    GtkWidget *fixes_exclusive_group;
     GtkWidget *actions_group;
     GtkWidget *back_button;
     GtkWidget *update_btn;
@@ -93,6 +94,14 @@ typedef struct {
     GtkWidget *lbl_legacy;
     GtkWidget *btn_broadcom;
     GtkWidget *lbl_broadcom;
+
+    GtkWidget *row_barrot;
+    GtkWidget *btn_barrot;
+    GtkWidget *lbl_barrot;
+
+    GtkWidget *row_ghlive;
+    GtkWidget *btn_ghlive;
+    GtkWidget *lbl_ghlive;
     GtkWidget *btn_rfkill;
     GtkWidget *btn_perm;
     GtkWidget *btn_cache;
@@ -122,7 +131,7 @@ extern char fw_path[64];
 extern gboolean has_elevation;
 extern gboolean in_flatpak;
 extern char askpass_path[128];
-extern const char *last_error_detail;
+extern char *last_error_detail;
 
 /* i18n.c */
 const char* _(const char *en);
@@ -151,6 +160,8 @@ void on_info_rfkill_clicked(GtkButton *btn, gpointer user_data);
 void on_info_restart_clicked(GtkButton *btn, gpointer user_data);
 void on_info_legacy_clicked(GtkButton *btn, gpointer user_data);
 void on_info_broadcom_clicked(GtkButton *btn, gpointer user_data);
+void on_info_barrot_clicked(GtkButton *btn, gpointer user_data);
+void on_info_ghlive_clicked(GtkButton *btn, gpointer user_data);
 void on_info_perm_clicked(GtkButton *btn, gpointer user_data);
 void on_info_cache_clicked(GtkButton *btn, gpointer user_data);
 
@@ -169,6 +180,8 @@ void run_fix_ertm(void);
 void run_fix_realtek(void);
 void run_fix_legacy(void);
 void run_fix_broadcom(void);
+void run_fix_barrot(void);
+void run_fix_ghlive(void);
 void run_fix_rfkill(void);
 void run_fix_perm(void);
 void run_fix_cache(void);

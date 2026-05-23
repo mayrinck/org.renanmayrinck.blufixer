@@ -49,7 +49,7 @@ static void on_donate_action(GSimpleAction *action, GVariant *parameter, gpointe
 }
 
 static void on_show_error_detail(GSimpleAction *action, GVariant *parameter, gpointer user_data) {
-    if (strlen(last_error_detail) == 0) return;
+    if (!last_error_detail || strlen(last_error_detail) == 0) return;
 
     AdwAlertDialog *dialog = ADW_ALERT_DIALOG(adw_alert_dialog_new(_("Operation failed"), NULL));
 
@@ -124,12 +124,26 @@ void on_device_selected(GtkButton *btn, gpointer user_data) {
 
     gboolean is_ps_licensed = g_strcmp0(vendor, "12ba") == 0 && g_strcmp0(product, "0030") == 0;
     gboolean is_ps = g_strcmp0(manufacturer, "Sony") == 0 || is_ps_licensed;
+    const char *ps_gen = NULL;
 
     if (is_ps_licensed) {
         desc = "CECHYA-0080";
         manufacturer = "Sony Computer Entertainment America LLC";
+        ps_gen = _("Yes, for PlayStation\u00ae3");
+    }
+    if (g_strcmp0(vendor, "054c") == 0) {
+        if (g_strcmp0(product, "0ce6") == 0 || g_strcmp0(product, "0df2") == 0)
+            ps_gen = _("Yes, for PlayStation\u00ae5");
+        else if (g_strcmp0(product, "05c4") == 0 || g_strcmp0(product, "09cc") == 0)
+            ps_gen = _("Yes, for PlayStation\u00ae4");
+        else if (g_strcmp0(product, "0ba0") == 0)
+            ps_gen = _("Yes, for PlayStation\u00ae4 and PC");
     }
 
+    if (!vendor || !product || !desc || !manufacturer) {
+        g_warning("on_device_selected: missing device data");
+        return;
+    }
     g_strlcpy(app_data.selected_vendor, vendor, sizeof(app_data.selected_vendor));
     g_strlcpy(app_data.selected_product, product, sizeof(app_data.selected_product));
     g_strlcpy(app_data.selected_desc, desc, sizeof(app_data.selected_desc));
@@ -147,7 +161,7 @@ void on_device_selected(GtkButton *btn, gpointer user_data) {
     gtk_widget_set_visible(app_data.row_tech_playstation, is_ps);
     if (is_ps) {
         adw_action_row_set_subtitle(ADW_ACTION_ROW(app_data.row_tech_playstation),
-            is_ps_licensed ? _("Yes, for PlayStation\u00ae3") : _("Yes"));
+            ps_gen ? ps_gen : _("Yes"));
     }
 
     gtk_widget_set_visible(app_data.back_button, TRUE);
@@ -188,15 +202,28 @@ static void on_copy_tech_sheet(GSimpleAction *action, GVariant *param, gpointer 
         return;
     }
 
+    const char *t_name = adw_preferences_row_get_title(ADW_PREFERENCES_ROW(app_data.row_tech_name));
+    const char *t_vendor = adw_preferences_row_get_title(ADW_PREFERENCES_ROW(app_data.row_tech_vendor));
+    const char *t_id = adw_preferences_row_get_title(ADW_PREFERENCES_ROW(app_data.row_tech_id));
+    const char *t_version = adw_preferences_row_get_title(ADW_PREFERENCES_ROW(app_data.row_tech_version));
+    const char *t_ps = adw_preferences_row_get_title(ADW_PREFERENCES_ROW(app_data.row_tech_playstation));
+
     g_autofree char *all;
     if (ps) {
         all = g_strdup_printf(
-            "%s\n%s\n%s\n%s\n%s",
-            name, vendor ? vendor : "", id ? id : "", version ? version : "", ps);
+            "%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s",
+            t_name, name,
+            t_vendor, vendor ? vendor : "",
+            t_id, id ? id : "",
+            t_version, version ? version : "",
+            t_ps, ps);
     } else {
         all = g_strdup_printf(
-            "%s\n%s\n%s\n%s",
-            name, vendor ? vendor : "", id ? id : "", version ? version : "");
+            "%s: %s\n%s: %s\n%s: %s\n%s: %s",
+            t_name, name,
+            t_vendor, vendor ? vendor : "",
+            t_id, id ? id : "",
+            t_version, version ? version : "");
     }
     gdk_clipboard_set_text(gtk_widget_get_clipboard(app_data.window), all);
     adw_toast_overlay_add_toast(ADW_TOAST_OVERLAY(app_data.toast_overlay),
@@ -359,8 +386,15 @@ static void activate(GtkApplication *app, gpointer user_data) {
     app_data.fixes_group = adw_preferences_group_new();
     adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(app_data.fixes_group), _("System Fixes"));
     adw_preferences_group_set_description(ADW_PREFERENCES_GROUP(app_data.fixes_group),
-        _("Applies configuration file changes or driver/firmware downloads. Some settings are hardware-specific and all can be reverted."));
+        _("Applies system configuration file changes to resolve issues. All modifications can be reverted."));
     adw_preferences_page_add(ADW_PREFERENCES_PAGE(pg2), ADW_PREFERENCES_GROUP(app_data.fixes_group));
+
+    app_data.fixes_exclusive_group = adw_preferences_group_new();
+    adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(app_data.fixes_exclusive_group), _("Exclusive Fixes"));
+    adw_preferences_group_set_description(ADW_PREFERENCES_GROUP(app_data.fixes_exclusive_group),
+        _("Fixes to resolve known issues specific to this device. All modifications can be reverted."));
+    gtk_widget_set_visible(app_data.fixes_exclusive_group, FALSE);
+    adw_preferences_page_add(ADW_PREFERENCES_PAGE(pg2), ADW_PREFERENCES_GROUP(app_data.fixes_exclusive_group));
 
     app_data.actions_group = adw_preferences_group_new();
     adw_preferences_group_set_title(ADW_PREFERENCES_GROUP(app_data.actions_group), _("Immediate Actions"));
@@ -369,15 +403,17 @@ static void activate(GtkApplication *app, gpointer user_data) {
     adw_preferences_page_add(ADW_PREFERENCES_PAGE(pg2), ADW_PREFERENCES_GROUP(app_data.actions_group));
 
     struct { const char *t; const char *sub; GCallback info; GCallback fix; int target_section; } rows[] = {
-        {_("CSR Energy Fix"), _("Recommended for CSR and Barrot/Generic dongles. Stabilizes the radio to fix detection and connection loops."), G_CALLBACK(on_info_csr_clicked), G_CALLBACK(run_fix_csr), 0},
-        {_("Disable ERTM for Gamepads"), _("Fixes automatic disconnections of modern Bluetooth gamepads."), G_CALLBACK(on_info_ertm_clicked), G_CALLBACK(run_fix_ertm), 0},
-        {_("Force Legacy Pairing Mode"), _("Allows old Bluetooth devices to pair with a fixed PIN."), G_CALLBACK(on_info_legacy_clicked), G_CALLBACK(run_fix_legacy), 0},
-        {_("Install Realtek Firmware (RTL8761B)"), _("Downloads and injects the missing official driver binaries."), G_CALLBACK(on_info_realtek_clicked), G_CALLBACK(run_fix_realtek), 0},
-        {_("Install Broadcom/Cypress Firmware (b43)"), _("Downloads and extracts the missing proprietary firmware for Broadcom chipsets."), G_CALLBACK(on_info_broadcom_clicked), G_CALLBACK(run_fix_broadcom), 0},
-        {_("Unblock Antenna"), _("Forces activation of adapters stuck in Airplane Mode."), G_CALLBACK(on_info_rfkill_clicked), G_CALLBACK(run_fix_rfkill), 1},
+        {_("Energy fix"), _("Recommended for CSR and Barrot/Generic dongles. Stabilizes the radio to fix detection and connection loops."), G_CALLBACK(on_info_csr_clicked), G_CALLBACK(run_fix_csr), 0},
+        {_("Enable Bluetooth dual mode"), _("Forces Bluetooth devices to operate in both available modes simultaneously: BR/EDR and BLE"), G_CALLBACK(on_info_barrot_clicked), G_CALLBACK(run_fix_barrot), 0},
+        {_("Force legacy pairing mode"), _("Allows old Bluetooth devices to pair with a fixed PIN."), G_CALLBACK(on_info_legacy_clicked), G_CALLBACK(run_fix_legacy), 0},
+        {_("Disable ERTM for gamepads"), _("Fixes automatic disconnections of modern Bluetooth gamepads."), G_CALLBACK(on_info_ertm_clicked), G_CALLBACK(run_fix_ertm), 0},
+        {_("Install Realtek firmware (RTL8761B)"), _("Downloads and injects the missing official driver binaries."), G_CALLBACK(on_info_realtek_clicked), G_CALLBACK(run_fix_realtek), 2},
+        {_("Fix read permission failure"), _("Forces the current user and apps to see the guitar and have access to its inputs"), G_CALLBACK(on_info_ghlive_clicked), G_CALLBACK(run_fix_ghlive), 2},
+        {_("Install Broadcom/Cypress firmware (b43)"), _("Downloads and extracts the missing proprietary firmware for Broadcom chipsets."), G_CALLBACK(on_info_broadcom_clicked), G_CALLBACK(run_fix_broadcom), 2},
+        {_("Unblock antenna"), _("Forces activation of adapters stuck in Airplane Mode."), G_CALLBACK(on_info_rfkill_clicked), G_CALLBACK(run_fix_rfkill), 1},
         {_("Add user permissions"), _("Adds the user to the lp group for Bluetooth D-Bus access."), G_CALLBACK(on_info_perm_clicked), G_CALLBACK(run_fix_perm), 1},
         {_("Clear device cache"), _("Removes all pairing caches to fix connection errors."), G_CALLBACK(on_info_cache_clicked), G_CALLBACK(run_fix_cache), 1},
-        {_("Restart Bluetooth Service"), _("Clears caches and buffers by restarting the system service."), G_CALLBACK(on_info_restart_clicked), G_CALLBACK(run_restart_service), 1}
+        {_("Restart Bluetooth service"), _("Clears caches and buffers by restarting the system service."), G_CALLBACK(on_info_restart_clicked), G_CALLBACK(run_restart_service), 1}
     };
 
     for(size_t i = 0; i < G_N_ELEMENTS(rows); i++) {
@@ -391,24 +427,28 @@ static void activate(GtkApplication *app, gpointer user_data) {
         g_signal_connect(info, "clicked", rows[i].info, NULL);
 
         GtkWidget *sp, *lbl;
-        const char *initial_text = (i >= 5) ? _("Run") : _("Apply");
+        const char *initial_text = (i >= 7) ? _("Run") : _("Apply");
         GtkWidget *fix = create_action_row_button(initial_text, rows[i].fix, &sp, &lbl);
 
         if (i == 0) { app_data.row_csr = row; app_data.btn_csr = fix; app_data.lbl_csr = lbl; }
-        else if (i == 1) { app_data.btn_ertm = fix; app_data.lbl_ertm = lbl; }
+        else if (i == 1) { app_data.row_barrot = row; app_data.btn_barrot = fix; app_data.lbl_barrot = lbl; }
         else if (i == 2) { app_data.btn_legacy = fix; app_data.lbl_legacy = lbl; }
-        else if (i == 3) { app_data.row_realtek = row; app_data.btn_realtek = fix; app_data.lbl_realtek = lbl; }
-        else if (i == 4) { app_data.row_broadcom = row; app_data.btn_broadcom = fix; app_data.lbl_broadcom = lbl; }
-        else if (i == 5) { app_data.btn_rfkill = fix; }
-        else if (i == 6) { app_data.btn_perm = fix; }
-        else if (i == 7) { app_data.btn_cache = fix; }
-        else if (i == 8) { app_data.btn_restart = fix; }
+        else if (i == 3) { app_data.btn_ertm = fix; app_data.lbl_ertm = lbl; }
+        else if (i == 4) { app_data.row_realtek = row; app_data.btn_realtek = fix; app_data.lbl_realtek = lbl; }
+        else if (i == 5) { app_data.row_ghlive = row; app_data.btn_ghlive = fix; app_data.lbl_ghlive = lbl; }
+        else if (i == 6) { app_data.row_broadcom = row; app_data.btn_broadcom = fix; app_data.lbl_broadcom = lbl; }
+        else if (i == 7) { app_data.btn_rfkill = fix; }
+        else if (i == 8) { app_data.btn_perm = fix; }
+        else if (i == 9) { app_data.btn_cache = fix; }
+        else if (i == 10) { app_data.btn_restart = fix; }
 
         gtk_box_append(GTK_BOX(box), info);
         gtk_box_append(GTK_BOX(box), fix);
         adw_action_row_add_suffix(ADW_ACTION_ROW(row), box);
 
-        if(rows[i].target_section == 0) {
+        if(rows[i].target_section == 2) {
+            adw_preferences_group_add(ADW_PREFERENCES_GROUP(app_data.fixes_exclusive_group), row);
+        } else if(rows[i].target_section == 0) {
             adw_preferences_group_add(ADW_PREFERENCES_GROUP(app_data.fixes_group), row);
         } else {
             adw_preferences_group_add(ADW_PREFERENCES_GROUP(app_data.actions_group), row);
